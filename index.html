@@ -519,10 +519,12 @@
     </div>
 
     <!-- JS Logic -->
+
     <script>
+          
         // CHANGE THIS TO YOUR RENDER DEPLOYMENT URL IN PRODUCTION
         // Example: const NODE_BACKEND_URL = "https://logicsilicon-unified-api.onrender.com";
-        const NODE_BACKEND_URL = "https://assessment-backend-6yrh.onrender.com"; 
+        const NODE_BACKEND_URL = "https://lms-backend-39z6.onrender.com"; 
 
         // --- STATE ---
         let state = {
@@ -1016,7 +1018,108 @@
         }
 
         window.filterLectures = function(cat) { state.lecFilter = cat; renderLectures(); }
-        window.playLecture = function(id) { state.activeLectureId = id; renderLectures(); }
+        // 1. This ONLY updates the UI when you click the sidebar
+window.selectLecture = function(id) {
+    state.activeLectureId = id;
+    renderLectures(); 
+}
+
+// Variable to store the player instance
+// --- INLINE YOUTUBE PLAYER LOGIC ---
+        let inlinePlayer = null;
+        let watermarkInterval = null;
+
+        function extractYouTubeID(url) {
+            if (!url) return null;
+            let match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+            return match ? match[1] : null;
+        }
+
+        window.selectLecture = function(id) {
+            state.activeLectureId = id;
+            // Stop the current video if they click a different lecture in the sidebar
+            if (inlinePlayer && typeof inlinePlayer.stopVideo === 'function') {
+                inlinePlayer.stopVideo(); 
+            }
+            renderLectures(); 
+        }
+
+        window.launchPlayer = function() {
+            const activeLec = state.lectures.find(l => String(l.id) === String(state.activeLectureId));
+            if (!activeLec) return;
+
+            const ytId = extractYouTubeID(activeLec.url || activeLec.urlFile);
+            if (!ytId) {
+                alert("Invalid YouTube link. Secure stream requires a valid YouTube URL.");
+                return;
+            }
+
+            // Swap UI to Player
+            document.getElementById('launch-screen').classList.add('hidden');
+            document.getElementById('inline-player-container').classList.remove('hidden');
+            
+            // Show Spinner, Hide Error
+            const spinner = document.getElementById('yt-loading-spinner');
+            const errScreen = document.getElementById('yt-error-message');
+            if(spinner) { spinner.classList.remove('hidden'); spinner.classList.add('flex'); }
+            if(errScreen) { errScreen.classList.add('hidden'); errScreen.classList.remove('flex'); }
+            
+            // Setup Dynamic Watermark
+            const watermarkText = state.user ? state.user.email : "Secure Student";
+            const watermarkId = state.user ? (state.user.id !== 'ADMIN' ? state.user.id : "Instructor") : "ID";
+            const wmEl = document.getElementById('dynamic-watermark');
+            wmEl.innerHTML = `<span>${watermarkText}</span><span class="text-lg text-sky-400 tracking-widest">${watermarkId}</span>`;
+
+            if(watermarkInterval) clearInterval(watermarkInterval);
+            watermarkInterval = setInterval(() => {
+                const xOffset = Math.floor(Math.random() * 60) - 30;
+                const yOffset = Math.floor(Math.random() * 60) - 30;
+                wmEl.style.transform = `translate(${xOffset}px, ${yOffset}px) rotate(-12deg)`;
+            }, 5000);
+
+            // Load YouTube Player with Event Listeners
+            if (inlinePlayer) {
+                inlinePlayer.loadVideoById(ytId);
+            } else {
+                inlinePlayer = new YT.Player('yt-player-div', {
+                    height: '100%',
+                    width: '100%',
+                    videoId: ytId,
+                    host: 'https://www.youtube-nocookie.com',
+                    playerVars: {
+                        'autoplay': 1, 'controls': 1, 'modestbranding': 1,
+                        'rel': 0, 'disablekb': 1, 'fs': 1,
+                        'origin': window.location.origin 
+                    },
+                    events: {
+                        'onStateChange': function(event) {
+                            // 1 = Playing, 3 = Buffering. Hide spinner when video is ready!
+                            if (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.BUFFERING) {
+                                const sp = document.getElementById('yt-loading-spinner');
+                                if(sp) { sp.classList.add('hidden'); sp.classList.remove('flex'); }
+                            }
+                        },
+                        'onError': function(event) {
+                            // Hide Spinner, Show Error Screen
+                            const sp = document.getElementById('yt-loading-spinner');
+                            const err = document.getElementById('yt-error-message');
+                            const errTxt = document.getElementById('yt-error-text');
+                            
+                            if(sp) { sp.classList.add('hidden'); sp.classList.remove('flex'); }
+                            if(err) { err.classList.remove('hidden'); err.classList.add('flex'); }
+                            
+                            // Decode YouTube Error Codes
+                            let msg = "An unknown error occurred while contacting YouTube.";
+                            if (event.data === 2) msg = "The video URL contains an invalid parameter.";
+                            if (event.data === 100) msg = "This video was removed or made private.";
+                            if (event.data === 101 || event.data === 150) msg = "The owner has disabled embedding for this video.";
+                            
+                            if(errTxt) errTxt.innerText = msg;
+                        }
+                    }
+                });
+            }
+        }
 
         let materialSource = 'link';
         window.toggleSource = function(src) {
@@ -1108,7 +1211,7 @@
                 const textClass = isActive ? 'text-[#02569B]' : 'text-slate-700';
                 
                 playlistHtml += `
-                    <button onclick="playLecture(${lec.id})" class="w-full text-left p-3.5 rounded-xl border transition-colors flex items-center gap-4 ${bgClass}">
+                    <button onclick="selectLecture(${lec.id})" class="w-full text-left p-3.5 rounded-xl border transition-colors flex items-center gap-4 ${bgClass}">
                         <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0 text-[#02569B]">
                             <svg class="w-3.5 h-3.5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                         </div>
@@ -1150,21 +1253,49 @@
 
             let playerHtml = '';
             if (activeLec) {
-                const embedUrl = getEmbedUrl(activeLec.urlFile);
                 playerHtml = `
                     <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col w-full relative">
-                        <div class="w-full aspect-video bg-[#2c2c2c] relative">
-                            <a href="${activeLec.urlFile}" target="_blank" class="absolute top-4 left-4 z-20 bg-white/90 hover:bg-white text-slate-800 text-[10px] font-bold tracking-widest uppercase px-3 py-1.5 rounded-md shadow-sm flex items-center gap-1.5 transition-colors" title="Open Video in a New Tab">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                                Open External
-                            </a>
-                            <div class="absolute top-4 right-4 z-10 bg-[#ef4444] text-white text-[9px] font-black tracking-widest uppercase px-3 py-1.5 rounded-md shadow-sm">SECURE STREAM</div>
-                            <iframe class="w-full h-full absolute inset-0 z-0" src="${embedUrl}" title="Video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                        
+                        <div id="inline-player-container" class="relative w-full aspect-video bg-[#090E17] hidden group">
+    
+                            <div id="yt-loading-spinner" class="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#090E17]">
+                                <div class="w-12 h-12 border-4 border-[#02569B]/30 border-t-[#02569B] rounded-full animate-spin mb-4"></div>
+                                <p class="text-[#02569B] font-bold tracking-widest text-xs uppercase animate-pulse">Establishing Secure Connection...</p>
+                            </div>
+
+                            <div id="yt-error-message" class="absolute inset-0 z-30 hidden flex-col items-center justify-center bg-[#090E17] text-center px-6">
+                                <div class="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mb-4">
+                                    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                                </div>
+                                <h3 class="text-xl font-bold text-white mb-2">Stream Failed</h3>
+                                <p id="yt-error-text" class="text-slate-400 text-sm max-w-md">The secure video stream could not be loaded.</p>
+                                <button onclick="selectLecture('${activeLec.id}')" class="mt-6 px-6 py-2.5 border border-slate-600 text-slate-300 rounded-xl hover:bg-slate-800 hover:text-white text-sm font-bold transition-colors">Reload Player</button>
+                            </div>
+
+                            <div id="yt-player-div" class="w-full h-full absolute inset-0 z-10 pointer-events-auto"></div>
+                            
+                            <div id="dynamic-watermark" class="pointer-events-none absolute inset-0 z-50 flex flex-col items-center justify-center opacity-25 text-white font-black text-2xl md:text-4xl transform -rotate-12 select-none mix-blend-overlay tracking-tight drop-shadow-xl transition-transform duration-1000 ease-in-out">
+                            </div>
+
+                            <div class="absolute top-0 left-0 w-full h-16 bg-gradient-to-b from-black/90 to-transparent z-40 pointer-events-auto" oncontextmenu="return false;"></div>
                         </div>
+
+                        <div id="launch-screen" class="w-full aspect-video bg-[#1e293b] relative flex flex-col items-center justify-center text-center p-8 border-b border-slate-200">
+                            <div class="w-16 h-16 bg-sky-500/10 text-sky-400 rounded-full flex items-center justify-center mx-auto mb-6 backdrop-blur-sm shadow-inner">
+                                <svg class="w-8 h-8 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-white mb-2 drop-shadow-md tracking-tight">${activeLec.title}</h3>
+                            <p class="text-sm text-slate-400 mb-8 font-medium">${activeLec.category} &middot; Duration: ${activeLec.duration}</p>
+                            <button onclick="launchPlayer()" class="btn-primary px-8 py-3.5 rounded-xl font-bold shadow-lg flex items-center gap-2 mx-auto hover:scale-105 transition-transform">
+                                <svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+                                Start Secure Stream
+                            </button>
+                        </div>
+                        
                         <div class="p-6 flex justify-between items-start bg-white z-10 relative">
                             <div>
                                 <h3 class="text-xl font-bold text-slate-900 mb-1">${activeLec.title}</h3>
-                                <p class="text-xs text-slate-500 font-medium">Duration: ${activeLec.duration}</p>
+                                <p class="text-xs text-slate-500 font-medium">Video Resource</p>
                             </div>
                             <span class="text-[10px] font-bold text-[#02569B] uppercase tracking-wider bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">${activeLec.category}</span>
                         </div>
@@ -1507,6 +1638,8 @@
                 `;
             });
         }
+
     </script>
+    <script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>
