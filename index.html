@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogicSilicon | LMS</title>
+    <link rel="icon" type="image/svg+xml" href="favicon1.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; overflow: hidden; }
+        h1, h2, h3, h4, h5, .font-display { font-family: 'Google Sans', sans-serif; }
+        .code-font { font-family: 'Fira Code', monospace; }
+        
+        .view { display: none; }
+        .view.active { display: flex; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .btn-primary { background-color: #02569B; color: white; transition: all 0.2s ease; box-shadow: 0 4px 14px rgba(2, 86, 155, 0.3); }
+        .btn-primary:hover { background-color: #01437A; box-shadow: 0 6px 20px rgba(2, 86, 155, 0.4); transform: translateY(-1px); }
+        .btn-secondary { background-color: #e3f2fd; color: #02569B; transition: all 0.2s ease; font-weight: 600;}
+        .btn-secondary:hover { background-color: #bbdefb; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+
+        .nav-item { transition: all 0.2s; border-left: 3px solid transparent; }
+        .nav-item:hover { background-color: #f1f5f9; color: #02569B; }
+        .nav-item.active { background-color: #e3f2fd; color: #02569B; border-left-color: #02569B; font-weight: 600; }
+
+        .bg-dot-grid { background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px); background-size: 24px 24px; }
+    </style>
+</head>
+<body>
+
+    <!-- GLOBAL BUFFERING OVERLAY -->
+    <div id="global-buffering" class="hidden fixed inset-0 z-[999] bg-slate-900/80 backdrop-blur-md flex-col items-center justify-center">
+        <div class="relative w-24 h-24 mb-6">
+            <div class="absolute inset-0 border-4 border-sky-500/20 rounded-full"></div>
+            <div class="absolute inset-0 border-4 border-[#02569B] rounded-full border-t-transparent animate-spin"></div>
+        </div>
+        <h3 class="text-white text-2xl font-extrabold tracking-widest uppercase animate-pulse">Buffering Data</h3>
+        <p class="text-slate-400 text-sm mt-2 font-medium" id="buffering-text">Synchronizing with Database...</p>
+    </div>
+
+    <div id="login-view" class="view active h-screen w-full relative overflow-y-auto overflow-x-hidden bg-[#090E17]">
+        <div class="absolute inset-0 bg-dot-grid"></div>
+        <div class="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-[#02569B] rounded-full filter blur-[150px] opacity-40 pointer-events-none animate-pulse" style="animation-duration: 8s;"></div>
+        <div class="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-sky-500 rounded-full filter blur-[150px] opacity-20 pointer-events-none"></div>
+
+        <div class="relative z-10 w-full min-h-full max-w-[1400px] mx-auto flex flex-col lg:flex-row items-center justify-center lg:justify-between px-6 lg:px-12 py-10 lg:py-6">
+            
+            <div class="hidden lg:flex flex-col justify-center w-1/2 pr-10 pointer-events-none">
+                <div class="flex items-center gap-3 text-white mb-10 lg:mb-12">
+                    <div class="w-10 h-10 bg-[#02569B] text-white rounded-[10px] flex items-center justify-center font-bold text-lg shadow-lg">LS</div>
+                    <span class="font-display font-semibold text-2xl tracking-tight">LogicSilicon</span>
+                </div>
+                
+                <h1 id="hero-title" class="text-4xl xl:text-[46px] font-display font-bold text-white leading-[1.15] mb-3 tracking-tight transition-opacity duration-500">
+                    Centralized Learning<br/>Management System.
+                </h1>
+                <p id="hero-desc" class="text-slate-400 text-lg font-normal max-w-md leading-relaxed transition-opacity duration-500">
+                    A unified platform for tracking assignments, video lectures, and student progress with zero friction.
+                </p>
+
+                <!-- Sleek Dashboard Mockup -->
+                <div class="w-full max-w-[480px] mt-8">
+                    <div class="rounded-xl overflow-hidden bg-[#1e1e1e] border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.5)]">
+                        <div class="bg-[#252526] px-4 py-3 flex items-center gap-4 border-b border-white/5">
+                            <div class="flex gap-2">
+                                <div class="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></div>
+                                <div class="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></div>
+                                <div class="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></div>
+                            </div>
+                            <span id="hero-filename" class="text-[#858585] text-xs code-font transition-opacity duration-500">dashboard_metrics.json</span>
+                        </div>
+                        <div id="hero-code" class="p-5 code-font text-[13px] leading-[1.6] text-[#d4d4d4] overflow-hidden h-[210px] transition-opacity duration-500">
+                            <span style="color:#569cd6">const</span> studentMetrics = {<br/>
+                            &nbsp;&nbsp;<span style="color:#9cdcfe">pendingAssignments</span>: <span style="color:#b5cea8">3</span>,<br/>
+                            &nbsp;&nbsp;<span style="color:#9cdcfe">completedTests</span>: <span style="color:#b5cea8">12</span>,<br/>
+                            &nbsp;&nbsp;<span style="color:#9cdcfe">averageScore</span>: <span style="color:#ce9178">"88.5%"</span>,<br/>
+                            &nbsp;&nbsp;<span style="color:#9cdcfe">latestLecture</span>: <span style="color:#ce9178">"UVM Sequences"</span><br/>
+                            };<br/><br/>
+                            <span style="color:#6a9955">// Syncing with portal...</span><br/>
+                            <span style="color:#4ec9b0">System</span>.log(<span style="color:#ce9178">"All modules up to date."</span>);
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8 flex items-center justify-between max-w-[480px]">
+                    <div class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Secure Infrastructure</div>
+                    <div class="flex gap-2">
+                        <div id="dot-0" class="w-6 h-1 rounded-full bg-[#02569B] transition-all duration-500"></div>
+                        <div id="dot-1" class="w-2 h-1 rounded-full bg-slate-700 transition-all duration-500"></div>
+                        <div id="dot-2" class="w-2 h-1 rounded-full bg-slate-700 transition-all duration-500"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full lg:w-[460px] flex items-center justify-center z-20">
+                <div class="bg-white p-8 sm:p-10 rounded-[2rem] border border-slate-100 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] w-full flex flex-col transition-colors">
+                    
+                    <div class="lg:hidden flex justify-center items-center gap-3 mb-8">
+                        <div class="w-12 h-12 bg-[#02569B] text-white rounded-[14px] flex items-center justify-center font-black text-2xl shadow-lg">LS</div>
+                        <span class="font-display font-extrabold text-3xl tracking-tight text-slate-900">LogicSilicon</span>
+                    </div>
+
+                    <h2 class="text-[28px] font-display font-extrabold text-slate-900 mb-1 tracking-tight">Welcome Back</h2>
+                    <p class="text-slate-500 text-[15px] mb-6 font-medium">Sign in to access your learning portal.</p>
+
+                    <div class="flex bg-slate-100/80 p-1.5 rounded-xl mb-6 border border-slate-200">
+                        <button id="auth-tab-student" onclick="setAuthRole('student')" class="flex-1 py-3 text-[13px] font-bold rounded-lg bg-white text-[#02569B] shadow-sm transition-all">Student</button>
+                        <button id="auth-tab-instructor" onclick="setAuthRole('admin')" class="flex-1 py-3 text-[13px] font-bold rounded-lg text-slate-500 hover:text-slate-700 transition-all">Instructor</button>
+                    </div>
+
+                    <div id="login-error" class="hidden bg-red-50 border border-red-100 text-red-600 p-3.5 rounded-xl mb-4 text-sm font-medium flex items-start gap-3">
+                        <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span id="login-error-text"></span>
+                    </div>
+
+                    <form onsubmit="handleLogin(event)">
+                        <div class="mb-4">
+                            <label class="block text-[11px] font-bold text-slate-500 mb-2 uppercase tracking-wider">Email Address</label>
+                            <input type="email" id="auth-email" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-[#02569B] focus:ring-2 focus:ring-[#02569B]/20 transition-all placeholder:text-slate-400" placeholder="name@domain.com">
+                        </div>
+                        <div class="mb-6">
+                            <label class="block text-[11px] font-bold text-slate-500 mb-2 uppercase tracking-wider">Password / Enrollment ID</label>
+                            <input type="password" id="auth-password" required class="w-full p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-[#02569B] focus:ring-2 focus:ring-[#02569B]/20 transition-all placeholder:text-slate-400" placeholder="••••••••">
+                        </div>
+                        <button type="submit" class="w-full py-3.5 rounded-xl font-bold text-white bg-[#02569B] hover:bg-[#01437A] transition-all shadow-lg shadow-[#02569B]/30 flex justify-center items-center gap-2">
+                            Sign In &rarr;
+                        </button>
+                    </form>
+
+                    <p class="mt-6 text-[10px] text-slate-400 font-semibold italic uppercase tracking-widest text-center">
+                        Access Restricted to Enrolled Users
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="dashboard-view" class="view h-screen w-full flex-col bg-slate-50">
+        
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 z-20 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-[#02569B] text-white rounded-lg flex items-center justify-center font-bold text-lg shadow-md">LS</div>
+                <span class="font-display font-bold text-[20px] text-slate-800 tracking-tight">LogicSilicon <span class="font-normal text-slate-400">| LMS</span></span>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right hidden sm:block">
+                    <p class="text-[10px] font-bold text-[#02569B] uppercase tracking-wider" id="user-role-display">Role</p>
+                    <p class="text-sm font-medium text-slate-700" id="user-email-display">user@domain.com</p>
+                </div>
+                <div class="w-px h-8 bg-slate-200 hidden sm:block"></div>
+                <button onclick="logout()" class="text-sm font-semibold text-slate-500 hover:text-red-500 transition-colors flex items-center gap-1">
+                    Log out
+                </button>
+            </div>
+        </header>
+
+        <div class="flex-1 flex overflow-hidden">
+            
+            <aside class="w-64 bg-white border-r border-slate-200 flex flex-col py-6 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10">
+                <nav class="flex-1 space-y-1 px-3">
+                    <button onclick="switchTab('overview')" class="nav-item active w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 font-medium text-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg> Overview
+                    </button>
+                    <button onclick="switchTab('courses')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 font-medium text-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> Video Lectures
+                    </button>
+                    <button onclick="switchTab('assignments')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 font-medium text-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg> Assignments
+                    </button>
+                    <button onclick="switchTab('tests')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 font-medium text-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Tests
+                    </button>
+                    <button onclick="switchTab('certificates')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 font-medium text-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> Certificates
+                    </button>
+                    <button onclick="switchTab('profile')" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 font-medium text-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg> My Profile
+                    </button>
+                </nav>
+            </aside>
+
+            <main class="flex-1 overflow-y-auto p-8 relative">
+                
+                <!-- TAB: OVERVIEW (REDESIGNED) -->
+                <div id="tab-overview" class="tab-content active space-y-8 max-w-6xl mx-auto">
+                    <div>
+                        <h2 class="text-3xl font-display font-bold text-slate-800 tracking-tight">Welcome back, <span id="overview-user-name">User</span>! 👋</h2>
+                        <p class="text-slate-500 mt-1">Here is what's happening with your VLSI training today.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-2 space-y-8">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <!-- Gradient Card -->
+                                <div class="relative overflow-hidden bg-gradient-to-br from-[#02569B] to-sky-700 p-6 rounded-3xl shadow-[0_10px_30px_-10px_rgba(2,86,155,0.5)] text-white flex flex-col justify-between transition-transform hover:-translate-y-1">
+                                    <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl"></div>
+                                    <div class="absolute bottom-0 left-0 -mb-4 -ml-4 w-20 h-20 bg-sky-300 opacity-20 rounded-full blur-xl"></div>
+                                    <div class="relative z-10 flex justify-between items-start mb-6">
+                                        <div>
+                                            <span class="text-[11px] font-bold text-sky-200 uppercase tracking-wider block mb-1">Pending Tasks</span>
+                                            <span class="text-5xl font-black tracking-tight" id="overview-pending-count">0</span>
+                        </div>
+                                        <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                                    </div>
+                                    <div class="relative z-10">
+                                        <span class="inline-flex items-center gap-1.5 text-xs font-semibold bg-white/20 px-3 py-1.5 rounded-lg backdrop-blur-sm">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></span> <span id="overview-pending-text">Requires your action</span>
+                                        </span>
+                        </div>
+                    </div>
+
+                                <!-- Clean White Card -->
+                                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between transition-transform hover:-translate-y-1 hover:shadow-md">
+                                    <div class="flex justify-between items-start mb-6">
+                                        <div>
+                                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Course Materials</span>
+                                            <span class="text-5xl font-black text-slate-800 tracking-tight" id="overview-lecture-count">0</span>
+                                        </div>
+                                        <div class="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 cursor-pointer" onclick="switchTab('courses')">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg> Accessible resources
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Upcoming Tasks -->
+                            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                                <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center">
+                                    <h3 class="font-bold text-slate-800">Upcoming Tasks</h3>
+                                    <button onclick="switchTab('assignments')" class="text-xs font-bold text-[#02569B] hover:underline">View All</button>
+                                </div>
+                                <div class="divide-y divide-slate-100" id="overview-upcoming-tasks">
+                                    <!-- Populated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column Calendar -->
+                        <div class="lg:col-span-1">
+                            <div id="calendar-container" class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm sticky top-8">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: COURSES / LECTURES -->
+                <div id="tab-courses" class="tab-content space-y-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 pb-2">
+                        <div>
+                            <h2 class="text-3xl font-display font-bold text-slate-800 tracking-tight">Video Lectures & Materials</h2>
+                            <p class="text-slate-500 text-sm font-medium mt-1">Navigate lectures at your own pace. Materials can be accessed securely below.</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <select id="lec-cat-filter" onchange="filterLectures(this.value)" class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#02569B] shadow-sm cursor-pointer hover:border-slate-300 transition-colors">
+                                <option value="All">All Categories</option>
+                                <option value="Digital">Digital Electronics</option>
+                                <option value="Verilog">Verilog</option>
+                                <option value="SV">SystemVerilog</option>
+                                <option value="UVM">UVM</option>
+                            </select>
+                            <button id="btn-add-lecture" onclick="toggleModal('lecture-modal')" class="hidden btn-primary px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm">
+                                + Add Material
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="lecture-workspace" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- TAB: ASSIGNMENTS -->
+                <div id="tab-assignments" class="tab-content space-y-6">
+                    <div class="flex justify-between items-end mb-6">
+                        <div>
+                            <h2 class="text-3xl font-display font-bold text-slate-800 tracking-tight">Assignments</h2>
+                            <p class="text-slate-500 mt-1">Download tasks, submit solutions (1 attempt allowed), and view grades.</p>
+                        </div>
+                        <button id="btn-add-assignment" onclick="toggleModal('assignment-modal')" class="hidden btn-primary px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm">
+                            + New Assignment
+                        </button>
+                    </div>
+
+                    <div class="flex bg-slate-100/80 p-1.5 rounded-xl w-fit mb-6 border border-slate-200 shadow-sm">
+                        <button onclick="filterAssignments('All')" class="ass-filter-btn active flex-1 px-5 py-2 text-[13px] font-bold rounded-lg bg-white text-[#02569B] shadow-sm transition-all" data-filter="All">All</button>
+                        <button onclick="filterAssignments('Digital')" class="ass-filter-btn flex-1 px-5 py-2 text-[13px] font-bold rounded-lg text-slate-500 hover:text-slate-700 transition-all" data-filter="Digital">Digital</button>
+                        <button onclick="filterAssignments('Verilog')" class="ass-filter-btn flex-1 px-5 py-2 text-[13px] font-bold rounded-lg text-slate-500 hover:text-slate-700 transition-all" data-filter="Verilog">Verilog</button>
+                        <button onclick="filterAssignments('SV')" class="ass-filter-btn flex-1 px-5 py-2 text-[13px] font-bold rounded-lg text-slate-500 hover:text-slate-700 transition-all" data-filter="SV">SV</button>
+                        <button onclick="filterAssignments('UVM')" class="ass-filter-btn flex-1 px-5 py-2 text-[13px] font-bold rounded-lg text-slate-500 hover:text-slate-700 transition-all" data-filter="UVM">UVM</button>
+                    </div>
+
+                    <div id="assignment-list" class="space-y-4">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- TAB: CERTIFICATES -->
+                <div id="tab-certificates" class="tab-content space-y-6">
+                    <div class="flex justify-between items-end mb-6 border-b border-slate-200 pb-4">
+                        <div>
+                            <h2 class="text-3xl font-display font-bold text-slate-800 tracking-tight">Certificates</h2>
+                            <p class="text-slate-500 mt-1">Official VLSI completion certificates and acknowledgments.</p>
+                        </div>
+                    </div>
+
+                    <div id="instructor-cert-area" class="hidden mb-8">
+                        <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100">
+                            <h3 class="font-bold text-[#02569B] mb-4 text-lg">Issue New Certificate</h3>
+                            <form onsubmit="handleIssueCertificate(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-blue-700 uppercase tracking-wide mb-1.5">Student Email</label>
+                                    <input type="email" id="cert-email" required class="w-full px-4 py-2.5 bg-white border border-blue-200 rounded-xl focus:ring-2 focus:ring-[#02569B] focus:outline-none text-sm shadow-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-blue-700 uppercase tracking-wide mb-1.5">Certificate Title</label>
+                                    <input type="text" id="cert-title" required class="w-full px-4 py-2.5 bg-white border border-blue-200 rounded-xl focus:ring-2 focus:ring-[#02569B] focus:outline-none text-sm shadow-sm" placeholder="e.g. Master of UVM">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-blue-700 uppercase tracking-wide mb-1.5">Upload PDF</label>
+                                    <input type="file" id="cert-file" accept=".pdf" required class="w-full px-4 py-2 bg-white border border-blue-200 rounded-xl text-xs cursor-pointer file:rounded file:border-0 file:bg-blue-100 file:text-[#02569B]">
+                                </div>
+                                <div>
+                                    <button type="submit" id="btn-submit-cert" class="w-full btn-primary py-2.5 rounded-xl font-bold text-[14px]">Issue Certificate</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div id="certificates-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    </div>
+                </div>
+
+                <!-- TAB: TESTS -->
+                <div id="tab-tests" class="tab-content">
+                    <h2 class="text-3xl font-display font-bold text-slate-800 mb-4 tracking-tight">Tests</h2>
+                    <div class="bg-white p-12 rounded-2xl border border-slate-200 text-center shadow-sm">
+                        <p class="text-slate-500 text-lg mb-6">All formal tests are conducted via the isolated Assessment Engine.</p>
+                        <a href="https://assessment.logicsilicon.in" target="_blank" class="btn-secondary px-8 py-3 rounded-full inline-block">Go to Assessment Portal</a>
+                    </div>
+                </div>
+
+                <!-- TAB: PROFILE -->
+                <div id="tab-profile" class="tab-content">
+                    <h2 class="text-3xl font-display font-bold text-slate-800 mb-6 tracking-tight">My Profile</h2>
+                    <div class="bg-white rounded-[24px] border border-slate-200 shadow-sm overflow-hidden mb-6 relative">
+                        <div class="h-36 bg-gradient-to-r from-[#02569B] to-[#38bdf8]"></div>
+                        <div class="px-10 pb-10 relative">
+                            <div class="absolute -top-14 left-10">
+                                <div class="w-28 h-28 rounded-full bg-gradient-to-br from-[#02569B] to-[#38bdf8] border-4 border-white shadow-lg flex items-center justify-center text-white text-4xl font-bold" id="profile-avatar">A</div>
+                            </div>
+                            <div class="flex justify-between items-start pt-20 mb-10">
+                                <div>
+                                    <h3 class="text-[28px] font-bold text-slate-900 leading-tight" id="profile-name">User</h3>
+                                    <p class="text-[15px] text-slate-500 font-medium mt-1" id="profile-batch-sub">Loading...</p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-y-10 gap-x-16 pt-8 border-t border-slate-100">
+                                <div>
+                                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Full Name</span>
+                                    <span class="text-[15px] font-semibold text-slate-800" id="profile-detail-name">-</span>
+                                </div>
+                                <div>
+                                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Enrollment ID</span>
+                                    <span class="text-[15px] font-semibold text-slate-800" id="profile-detail-id">-</span>
+                                </div>
+                                <div>
+                                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Email Address</span>
+                                    <span class="text-[15px] font-semibold text-slate-800" id="profile-email">-</span>
+                                </div>
+                                <div>
+                                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Current Batch</span>
+                                    <span class="text-[15px] font-semibold text-slate-800" id="profile-batch">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+
+    <div id="lecture-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h3 class="font-bold text-slate-800 text-lg">Add Course Material</h3>
+                <button onclick="toggleModal('lecture-modal')" class="text-slate-400 hover:text-slate-700 font-bold text-2xl leading-none">&times;</button>
+            </div>
+            <form onsubmit="handleAddLecture(event)" class="p-6 space-y-5">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">Type</label>
+                    <select id="lec-type" onchange="toggleLecInput(this.value)" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#02569B] focus:outline-none cursor-pointer text-sm">
+                        <option value="Video">Video Lecture</option>
+                        <option value="Document">Learning Material (PDF/PPT/DOC)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">Title</label>
+                    <input type="text" id="lec-title" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#02569B] focus:outline-none transition-shadow text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">Category</label>
+                        <select id="lec-cat" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#02569B] focus:outline-none cursor-pointer text-sm font-medium">
+                            <option value="Digital">Digital</option>
+                            <option value="Verilog">Verilog</option>
+                            <option value="SV">SV</option>
+                            <option value="UVM">UVM</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">Duration/Subtext</label>
+                        <input type="text" id="lec-dur" required placeholder="e.g. 45:20 or '10 Pages'" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#02569B] focus:outline-none transition-shadow text-sm">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">Material Source</label>
+                    <div class="flex bg-slate-100/80 p-1.5 rounded-xl border border-slate-200">
+                        <button type="button" id="src-btn-link" onclick="toggleSource('link')" class="flex-1 py-2 text-[12px] font-bold rounded-lg bg-white text-[#02569B] shadow-sm transition-all">Paste Link</button>
+                        <button type="button" id="src-btn-upload" onclick="toggleSource('upload')" class="flex-1 py-2 text-[12px] font-bold rounded-lg text-slate-500 hover:text-slate-700 transition-all">Upload File</button>
+                    </div>
+                </div>
+
+                <div id="lec-link-container">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">External Link (Drive / YouTube)</label>
+                    <input type="url" id="lec-link" placeholder="https://..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+                </div>
+                <div id="lec-file-container" class="hidden">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">Upload File (Max 10MB)</label>
+                    <input type="file" id="lec-file" accept=".pdf,.ppt,.pptx,.doc,.docx,.mp4" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm cursor-pointer file:mr-4 file:py-2.5 file:px-5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-[#02569B]">
+                </div>
+
+                <button type="submit" id="btn-submit-lec" class="w-full btn-primary py-3.5 rounded-xl font-bold mt-4 text-[15px]">Publish Material</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="assignment-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h3 class="font-bold text-slate-800 text-lg">Create Assignment</h3>
+                <button onclick="toggleModal('assignment-modal')" class="text-slate-400 hover:text-slate-700 font-bold text-2xl leading-none">&times;</button>
+            </div>
+            <form onsubmit="handleAddAssignment(event)" class="p-6 space-y-5">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">Title</label>
+                    <input type="text" id="ass-title" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#02569B] focus:outline-none transition-shadow text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">Category</label>
+                        <select id="ass-cat" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#02569B] focus:outline-none cursor-pointer text-sm font-medium">
+                            <option value="Digital">Digital</option>
+                            <option value="Verilog">Verilog</option>
+                            <option value="SV">SV</option>
+                            <option value="UVM">UVM</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">Max Marks</label>
+                        <input type="number" id="ass-marks" required value="10" min="1" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#02569B] focus:outline-none transition-shadow text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">Upload Question File (Max 10MB)</label>
+                    <input type="file" id="ass-file" accept=".pdf" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm file:mr-4 file:py-2.5 file:px-5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-[#02569B] hover:file:bg-blue-100 cursor-pointer transition-colors">
+                </div>
+                <button type="submit" id="btn-submit-ass" class="w-full btn-primary py-3.5 rounded-xl font-bold mt-4 text-[15px]">Publish Assignment</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="grade-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h3 class="font-bold text-slate-800 text-lg">Grade Submission</h3>
+                <button onclick="toggleModal('grade-modal')" class="text-slate-400 hover:text-slate-700 font-bold text-2xl leading-none">&times;</button>
+            </div>
+            <form onsubmit="handleGradeSubmit(event)" class="p-6 space-y-5">
+                <input type="hidden" id="grade-ass-id">
+                <input type="hidden" id="grade-student-email">
+                <div class="flex justify-between items-center bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <span class="text-sm font-bold text-slate-700" id="grade-student-display">Student</span>
+                    <a id="grade-download-link" href="#" class="text-[11px] uppercase tracking-wider font-bold text-[#02569B] hover:underline flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> PDF
+                    </a>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">Marks Alloted (out of <span id="grade-max" class="text-slate-800"></span>)</label>
+                    <input type="number" id="grade-marks" required min="0" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#02569B] focus:outline-none transition-shadow text-sm">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">Remarks</label>
+                    <textarea id="grade-remarks" rows="3" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#02569B] focus:outline-none transition-shadow text-sm resize-none"></textarea>
+                </div>
+                <button type="submit" id="btn-save-grade" class="w-full btn-primary py-3.5 rounded-xl font-bold mt-4 text-[15px]">Save Grade</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- JS Logic -->
+    <script>
+        // CHANGE THIS TO YOUR RENDER DEPLOYMENT URL IN PRODUCTION
+        // Example: const NODE_BACKEND_URL = "https://logicsilicon-unified-api.onrender.com";
+        const NODE_BACKEND_URL = "https://assessment-backend-6yrh.onrender.com"; 
+
+        // --- STATE ---
+        let state = {
+            role: 'student', 
+            user: null, 
+            assFilter: 'All', lecFilter: 'All', activeLectureId: null, 
+            assignments: [], lectures: [], materials: [], certificates: []
+        };
+
+        const heroSlides = [
+            {
+                title: "Centralized Learning<br/>Management System.",
+                desc: "A unified platform for tracking assignments, video lectures, and student progress with zero friction.",
+                filename: "dashboard_metrics.json",
+                code: `<span style="color:#569cd6">const</span> studentMetrics = {<br/>&nbsp;&nbsp;<span style="color:#9cdcfe">pendingAssignments</span>: <span style="color:#b5cea8">3</span>,<br/>&nbsp;&nbsp;<span style="color:#9cdcfe">completedTests</span>: <span style="color:#b5cea8">12</span>,<br/>&nbsp;&nbsp;<span style="color:#9cdcfe">averageScore</span>: <span style="color:#ce9178">"88.5%"</span>,<br/>&nbsp;&nbsp;<span style="color:#9cdcfe">latestLecture</span>: <span style="color:#ce9178">"UVM Sequences"</span><br/>};<br/><br/><span style="color:#6a9955">// Syncing with portal...</span><br/><span style="color:#4ec9b0">System</span>.log(<span style="color:#ce9178">"All modules up to date."</span>);`
+            },
+            {
+                title: "Secure & Proctored<br/>Assessment Engine.",
+                desc: "Evaluate true hardware engineering competency with strict environment lockdown and isolated simulation.",
+                filename: "proctor_config.yml",
+                code: `<span style="color:#569cd6">security_profile</span>: strict<br/><span style="color:#569cd6">allow_tab_switch</span>: false<br/><span style="color:#569cd6">require_fullscreen</span>: true<br/><span style="color:#569cd6">telemetry_interval</span>: 30s<br/><br/><span style="color:#6a9955"># Initializing security daemon...</span><br/><span style="color:#4ec9b0">Logger</span>.info(<span style="color:#ce9178">"Candidate environment secure."</span>);`
+            },
+            {
+                title: "Instant Verification<br/>& Auto-Grading.",
+                desc: "Icarus Verilog backend running self-checking testbenches inside isolated Docker containers.",
+                filename: "auto_grade.sh",
+                code: `<span style="color:#569cd6">$</span> iverilog -g2012 design.sv tb.sv<br/><span style="color:#569cd6">$</span> vvp a.out<br/><span style="color:#b5cea8">[✓]</span> Test Vector 1 Passed<br/><span style="color:#b5cea8">[✓]</span> Test Vector 2 Passed<br/><br/><span style="color:#6a9955"># Finalizing results...</span><br/><span style="color:#4ec9b0">Score</span>: <span style="color:#ce9178">100/100</span>`
+            }
+        ];
+
+        let currentHeroSlide = 0;
+
+        function cycleHeroContent() {
+            const titleEl = document.getElementById('hero-title');
+            const descEl = document.getElementById('hero-desc');
+            const fileEl = document.getElementById('hero-filename');
+            const codeEl = document.getElementById('hero-code');
+
+            if(!titleEl) return; 
+
+            titleEl.style.opacity = 0;
+            descEl.style.opacity = 0;
+            fileEl.style.opacity = 0;
+            codeEl.style.opacity = 0;
+
+            for (let i = 0; i < heroSlides.length; i++) {
+                const dot = document.getElementById(`dot-${i}`);
+                if(dot) {
+                    if (i === ((currentHeroSlide + 1) % heroSlides.length)) {
+                        dot.className = "w-6 h-1 rounded-full bg-[#02569B] transition-all duration-500";
+                    } else {
+                        dot.className = "w-2 h-1 rounded-full bg-slate-700 transition-all duration-500";
+                    }
+                }
+            }
+
+            setTimeout(() => {
+                currentHeroSlide = (currentHeroSlide + 1) % heroSlides.length;
+                titleEl.innerHTML = heroSlides[currentHeroSlide].title;
+                descEl.innerHTML = heroSlides[currentHeroSlide].desc;
+                fileEl.innerHTML = heroSlides[currentHeroSlide].filename;
+                codeEl.innerHTML = heroSlides[currentHeroSlide].code;
+
+                titleEl.style.opacity = 1;
+                descEl.style.opacity = 1;
+                fileEl.style.opacity = 1;
+                codeEl.style.opacity = 1;
+            }, 500);
+        }
+
+        // GLOBAL BUFFERING UI LOGIC
+        function showBuffering(msg = "Synchronizing with Database...") {
+            document.getElementById('buffering-text').innerText = msg;
+            document.getElementById('global-buffering').classList.remove('hidden');
+            document.getElementById('global-buffering').classList.add('flex');
+        }
+
+        function hideBuffering() {
+            document.getElementById('global-buffering').classList.add('hidden');
+            document.getElementById('global-buffering').classList.remove('flex');
+        }
+
+        // --- SESSION RECOVERY ON LOAD ---
+        window.onload = async () => {
+            setInterval(cycleHeroContent, 5000);
+
+            const savedSession = localStorage.getItem('ls_lms_user');
+            const savedToken = localStorage.getItem('ls_jwt_token');
+            if (savedSession && savedToken) {
+                try {
+                    state.user = JSON.parse(savedSession);
+                    state.role = state.user.role;
+                    
+                    document.getElementById('login-view').classList.remove('active');
+                    document.getElementById('dashboard-view').classList.add('active');
+                    
+                    document.getElementById('user-email-display').innerText = state.user.email;
+                    document.getElementById('user-role-display').innerText = state.user.role === 'admin' ? 'Instructor' : 'Student';
+                    
+                    updateProfileUI(state.user.email, state.user.id, state.user.batch || "Loading...");
+                    setupRoleUI();
+                    
+                    showBuffering("Restoring Session & Fetching Data...");
+                    await fetchLMSData(true); 
+                    hideBuffering();
+                    
+                    switchTab('overview');
+                } catch (e) {
+                    console.error("Session restore error", e);
+                    hideBuffering();
+                    logout();
+                }
+            }
+        };
+
+        // --- BASE64 HELPER ---
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // --- SECURE API REQUEST WRAPPER ---
+        async function apiRequest(endpoint, payload) {
+            const token = localStorage.getItem('ls_jwt_token');
+            if (!token && endpoint !== '/login') {
+                logout();
+                throw new Error("No authentication token found.");
+            }
+            
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            const res = await fetch(`${NODE_BACKEND_URL}${endpoint}`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(payload)
+            });
+
+            if (res.status === 401 || res.status === 403) {
+                logout();
+                throw new Error("Session expired. Please log in again.");
+            }
+
+            return res.json();
+        }
+
+        // --- AUTH & CORE ---
+        function setAuthRole(role) {
+            state.role = role;
+            const btnS = document.getElementById('auth-tab-student');
+            const btnI = document.getElementById('auth-tab-instructor');
+            if(role === 'student') {
+                btnS.className = "flex-1 py-3 text-[13px] font-bold rounded-lg bg-white text-[#02569B] shadow-sm transition-all";
+                btnI.className = "flex-1 py-3 text-[13px] font-bold rounded-lg text-slate-500 hover:text-slate-700 transition-all";
+            } else {
+                btnI.className = "flex-1 py-3 text-[13px] font-bold rounded-lg bg-white text-[#02569B] shadow-sm transition-all";
+                btnS.className = "flex-1 py-3 text-[13px] font-bold rounded-lg text-slate-500 hover:text-slate-700 transition-all";
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const authString = document.getElementById('auth-password').value;
+            const btn = e.target.querySelector('button[type="submit"]');
+            const errorDiv = document.getElementById('login-error');
+            const errorText = document.getElementById('login-error-text');
+            const originalText = btn.innerText;
+            
+            showBuffering("Authenticating User...");
+            btn.innerText = "Verifying...";
+            btn.disabled = true;
+            errorDiv.classList.add('hidden');
+
+            try {
+                const data = await apiRequest('/login', { role: state.role, email: email, authString: authString });
+                
+                if (data.status === 'success') {
+                    const userId = state.role === 'student' ? authString : 'ADMIN';
+                    state.user = { email: email, role: state.role, id: userId, batch: data.batch };
+                    
+                    localStorage.setItem('ls_lms_user', JSON.stringify(state.user));
+                    localStorage.setItem('ls_jwt_token', data.token); // Store JWT securely
+                    
+                    document.getElementById('login-view').classList.remove('active');
+                    document.getElementById('dashboard-view').classList.add('active');
+                    
+                    document.getElementById('user-email-display').innerText = email;
+                    document.getElementById('user-role-display').innerText = state.role === 'admin' ? 'Instructor' : 'Student';
+                    
+                    updateProfileUI(email, userId, data.batch);
+                    setupRoleUI();
+                    
+                    showBuffering("Loading Portal Data...");
+                    await fetchLMSData(true); 
+                    
+                    hideBuffering();
+                    switchTab('overview');
+                } else {
+                    hideBuffering();
+                    errorText.innerText = data.message || "Invalid credentials. Please verify your access.";
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch(err) {
+                hideBuffering();
+                errorText.innerText = "Network error. Please ensure the Render backend is running.";
+                errorDiv.classList.remove('hidden');
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function updateProfileUI(email, id, batch) {
+            const namePart = email.split('@')[0];
+            const capitalizedName = namePart.split('.').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+            
+            document.getElementById('profile-avatar').innerText = capitalizedName.charAt(0);
+            document.getElementById('profile-name').innerText = capitalizedName;
+            document.getElementById('profile-detail-name').innerText = capitalizedName;
+            document.getElementById('profile-email').innerText = email;
+            document.getElementById('profile-detail-id').innerText = id === 'ADMIN' ? 'Instructor-Account' : id;
+            document.getElementById('profile-batch').innerText = batch || "Loading...";
+            document.getElementById('profile-batch-sub').innerText = batch || "Loading...";
+        }
+
+        function logout() {
+            localStorage.removeItem('ls_lms_user');
+            localStorage.removeItem('ls_jwt_token');
+            state.user = null;
+            document.getElementById('dashboard-view').classList.remove('active');
+            document.getElementById('login-view').classList.add('active');
+            document.getElementById('auth-password').value = '';
+        }
+
+        async function fetchLMSData(quiet = false) {
+            if (!quiet) showBuffering("Synchronizing records with Database...");
+            try {
+                const data = await apiRequest('/api/lms', { action: 'fetchLMSData' });
+                
+                if (data.status === 'success') {
+                    state.assignments = []; state.lectures = []; state.materials = []; state.certificates = data.certificates || [];
+                    
+                    data.items.forEach(item => {
+                        if (item.type === 'Assignment') {
+                            state.assignments.push({
+                                id: item.id, title: item.title, category: item.category, 
+                                maxMarks: parseInt(item.durationMarks), filename: item.urlFile, submissions: []
+                            });
+                        } else if (item.type === 'Video') {
+                            state.lectures.push({
+                                id: item.id, type: item.type, title: item.title, 
+                                category: item.category, duration: item.durationMarks, url: item.urlFile
+                            });
+                        } else {
+                            state.materials.push({
+                                id: item.id, type: item.type, title: item.title, 
+                                category: item.category, duration: item.durationMarks, url: item.urlFile
+                            });
+                        }
+                    });
+
+                    data.submissions.forEach(sub => {
+                        // CRITICAL FIX: Match using Title (which backend stores in sub.title)
+                        const ass = state.assignments.find(a => String(a.title) === String(sub.title || sub.assId));
+                        if(ass) {
+                            ass.submissions.push({
+                                studentEmail: sub.studentEmail, filename: sub.filename,
+                                marks: sub.marks !== "" && sub.marks !== undefined && sub.marks !== null ? sub.marks : undefined, 
+                                remarks: sub.remarks
+                            });
+                        }
+                    });
+                    
+                    if(state.lectures.length > 0 && !state.activeLectureId) state.activeLectureId = state.lectures[0].id;
+                    
+                    renderLectures();
+                    renderAssignments();
+                    renderCertificates();
+                    updateOverview();
+                }
+            } catch (err) { 
+                console.error("Fetch Data Error", err); 
+            } finally {
+                if (!quiet) hideBuffering();
+            }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            if(event && event.currentTarget && event.currentTarget.classList) event.currentTarget.classList.add('active');
+
+            if(tabId === 'assignments') renderAssignments();
+            if(tabId === 'courses') renderLectures();
+            if(tabId === 'certificates') renderCertificates();
+            if(tabId === 'overview') { updateOverview(); renderCalendar(); }
+        }
+
+        function setupRoleUI() {
+            if(state.user.role === 'admin') {
+                document.getElementById('btn-add-lecture').classList.remove('hidden');
+                document.getElementById('btn-add-assignment').classList.remove('hidden');
+                document.getElementById('instructor-cert-area').classList.remove('hidden');
+            } else {
+                document.getElementById('btn-add-lecture').classList.add('hidden');
+                document.getElementById('btn-add-assignment').classList.add('hidden');
+                document.getElementById('instructor-cert-area').classList.add('hidden');
+            }
+        }
+
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if(modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden'); modal.classList.add('flex');
+            } else {
+                modal.classList.add('hidden'); modal.classList.remove('flex');
+            }
+        }
+
+        function updateOverview() {
+            if(state.user) {
+                const namePart = state.user.email.split('@')[0];
+                const capitalizedName = namePart.split('.').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+                document.getElementById('overview-user-name').innerText = capitalizedName;
+            }
+
+            document.getElementById('overview-lecture-count').innerText = state.lectures.length + state.materials.length;
+            
+            let tasksHtml = '';
+            
+            if(state.user.role === 'student') {
+                let pendingAssignments = state.assignments.filter(a => !a.submissions.find(s => String(s.studentEmail).toLowerCase() === state.user.email.toLowerCase()));
+                document.getElementById('overview-pending-count').innerText = pendingAssignments.length;
+                document.getElementById('overview-pending-text').innerText = "Requires your action";
+                
+                pendingAssignments.slice(0, 3).forEach(task => {
+                    tasksHtml += `
+                        <div class="p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 border border-purple-100">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-sm">${task.title}</h4>
+                                    <p class="text-xs text-slate-500 mt-0.5">${task.category} &middot; ${task.maxMarks} Marks</p>
+                                </div>
+                            </div>
+                            <button onclick="switchTab('assignments')" class="px-5 py-2 bg-slate-900 text-white text-xs font-bold rounded-lg shadow-sm hover:bg-slate-800 transition-colors">Start</button>
+                        </div>
+                    `;
+                });
+            } else {
+                let toGrade = 0;
+                let gradingTasks = [];
+                state.assignments.forEach(a => { 
+                    let ungraded = a.submissions.filter(s => s.marks === undefined || s.marks === null || s.marks === "");
+                    toGrade += ungraded.length;
+                    if (ungraded.length > 0) {
+                        gradingTasks.push({ title: a.title, pending: ungraded.length });
+                    }
+                });
+                document.getElementById('overview-pending-count').innerText = toGrade;
+                document.getElementById('overview-pending-text').innerText = "Requires grading";
+                
+                gradingTasks.slice(0, 3).forEach(task => {
+                    tasksHtml += `
+                        <div class="p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-sm">${task.title}</h4>
+                                    <p class="text-xs text-slate-500 mt-0.5">${task.pending} Submissions to Grade</p>
+                                </div>
+                            </div>
+                            <button onclick="switchTab('assignments')" class="px-5 py-2 bg-[#02569B] text-white text-xs font-bold rounded-lg shadow-sm hover:bg-[#01437A] transition-colors">Grade</button>
+                        </div>
+                    `;
+                });
+            }
+            
+            if(tasksHtml === '') {
+                tasksHtml = `<div class="p-6 text-center text-slate-500 text-sm font-medium">No pending tasks at the moment! 🎉</div>`;
+            }
+            document.getElementById('overview-upcoming-tasks').innerHTML = tasksHtml;
+        }
+
+        // --- SCROLLABLE CALENDAR ---
+        let calMonth = new Date().getMonth();
+        let calYear = new Date().getFullYear();
+
+        window.changeCalMonth = function(offset) {
+            calMonth += offset;
+            if (calMonth < 0) { calMonth = 11; calYear--; }
+            else if (calMonth > 11) { calMonth = 0; calYear++; }
+            renderCalendar();
+        };
+
+        function renderCalendar() {
+            const calContainer = document.getElementById('calendar-container');
+            if(!calContainer) return;
+            
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+            const firstDay = new Date(calYear, calMonth, 1).getDay();
+            const today = new Date();
+            const isCurrentMonth = today.getMonth() === calMonth && today.getFullYear() === calYear;
+
+            let html = `
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-bold text-slate-800 text-lg">${monthNames[calMonth]} ${calYear}</h3>
+                    <div class="flex gap-1.5">
+                        <button onclick="changeCalMonth(-1)" class="w-8 h-8 rounded-full bg-slate-50 border border-slate-200 text-slate-500 flex items-center justify-center hover:bg-slate-100 hover:text-slate-800 transition-colors">&lt;</button>
+                        <button onclick="changeCalMonth(1)" class="w-8 h-8 rounded-full bg-slate-50 border border-slate-200 text-slate-500 flex items-center justify-center hover:bg-slate-100 hover:text-slate-800 transition-colors">&gt;</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-7 gap-y-2 text-center">
+                    <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Su</div>
+                    <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Mo</div>
+                    <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Tu</div>
+                    <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">We</div>
+                    <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Th</div>
+                    <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Fr</div>
+                    <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Sa</div>
+            `;
+            
+            for (let i = 0; i < firstDay; i++) html += `<div></div>`;
+            
+            for (let i = 1; i <= daysInMonth; i++) {
+                const isToday = isCurrentMonth && i === today.getDate();
+                
+                let eventDot = '';
+                if (isCurrentMonth) {
+                    if (i === today.getDate() + 2) eventDot = `<div class="w-1 h-1 rounded-full bg-purple-500 mt-1 absolute bottom-1.5"></div>`;
+                    else if (i === today.getDate() + 5) eventDot = `<div class="w-1 h-1 rounded-full bg-[#02569B] mt-1 absolute bottom-1.5"></div>`;
+                }
+
+                if (isToday) {
+                html += `
+                    <div class="aspect-square flex flex-col items-center justify-center rounded-xl text-sm font-bold bg-[#02569B] text-white shadow-lg shadow-blue-200 cursor-pointer relative">
+                        ${i}
+                        <div class="w-1 h-1 rounded-full bg-white mt-1 absolute bottom-1.5"></div>
+                    </div>`;
+                } else {
+                    html += `
+                    <div class="aspect-square flex flex-col items-center justify-center rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer relative">
+                        ${i}
+                        ${eventDot}
+                    </div>`;
+            }
+            }
+            
+            html += `
+                </div>
+                <div class="mt-6 pt-6 border-t border-slate-100">
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Legend</h4>
+                    <div class="flex flex-wrap gap-4">
+                        <div class="flex items-center gap-2 text-xs text-slate-600 font-medium">
+                            <div class="w-2 h-2 rounded-full bg-white border border-slate-300"></div> Today
+                        </div>
+                        <div class="flex items-center gap-2 text-xs text-slate-600 font-medium">
+                            <div class="w-2 h-2 rounded-full bg-[#02569B]"></div> Lecture / Material
+                        </div>
+                        <div class="flex items-center gap-2 text-xs text-slate-600 font-medium">
+                            <div class="w-2 h-2 rounded-full bg-purple-500"></div> Assignment Due
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            calContainer.innerHTML = html;
+        }
+
+        // --- LECTURES & MATERIALS LOGIC ---
+        function getEmbedUrl(url) {
+            if (!url) return '';
+            let ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+            if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
+            
+            let driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+            if (driveMatch) return `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
+            
+            return url;
+        }
+
+        window.filterLectures = function(cat) { state.lecFilter = cat; renderLectures(); }
+        window.playLecture = function(id) { state.activeLectureId = id; renderLectures(); }
+
+        let materialSource = 'link';
+        window.toggleSource = function(src) {
+            materialSource = src;
+            if (src === 'link') {
+                document.getElementById('src-btn-link').className = "flex-1 py-2 text-[12px] font-bold rounded-lg bg-white text-[#02569B] shadow-sm transition-all";
+                document.getElementById('src-btn-upload').className = "flex-1 py-2 text-[12px] font-bold rounded-lg text-slate-500 hover:text-slate-700 transition-all";
+                document.getElementById('lec-link-container').classList.remove('hidden');
+                document.getElementById('lec-file-container').classList.add('hidden');
+            } else {
+                document.getElementById('src-btn-upload').className = "flex-1 py-2 text-[12px] font-bold rounded-lg bg-white text-[#02569B] shadow-sm transition-all";
+                document.getElementById('src-btn-link').className = "flex-1 py-2 text-[12px] font-bold rounded-lg text-slate-500 hover:text-slate-700 transition-all";
+                document.getElementById('lec-link-container').classList.add('hidden');
+                document.getElementById('lec-file-container').classList.remove('hidden');
+            }
+        }
+
+        async function handleAddLecture(e) {
+            e.preventDefault();
+            const type = document.getElementById('lec-type').value;
+            const title = document.getElementById('lec-title').value;
+            const cat = document.getElementById('lec-cat').value;
+            const dur = document.getElementById('lec-dur').value;
+            const btn = document.getElementById('btn-submit-lec');
+
+            let urlFile = "";
+            let fileBase64 = null;
+
+            if (materialSource === 'link') {
+                urlFile = document.getElementById('lec-link').value;
+                if(!urlFile) { alert("Please enter a link."); return; }
+            } else {
+                const fileInput = document.getElementById('lec-file');
+                if(fileInput.files.length === 0) { alert("Please attach a file."); return; }
+                const file = fileInput.files[0];
+                
+                // 10MB limit to prevent browser crash
+                if (file.size > 10 * 1024 * 1024) {
+                    alert("File is too large! Maximum allowed size is 10MB. Please use Google Drive and paste the link instead.");
+                    return;
+                }
+                
+                urlFile = file.name;
+                showBuffering("Encoding File to Base64...");
+                fileBase64 = await getBase64(file);
+            }
+
+            showBuffering("Publishing Material to Cloud...");
+            const newMaterial = { id: Date.now(), type, title, category: cat, durationMarks: dur, urlFile: urlFile, fileBase64: fileBase64 };
+            
+            try {
+                await apiRequest('/api/lms', { action: 'addLMSItem', item: newMaterial });
+                await fetchLMSData(true); 
+            } catch(err) { 
+                console.error(err); 
+                hideBuffering();
+            }
+
+            toggleModal('lecture-modal'); e.target.reset(); btn.innerText = "Publish Material";
+        }
+
+        function renderLectures() {
+            const container = document.getElementById('lecture-workspace');
+            container.innerHTML = '';
+            
+            let filteredLecs = state.lectures;
+            let filteredMats = state.materials;
+            
+            if (state.lecFilter !== 'All') {
+                filteredLecs = state.lectures.filter(l => l.category === state.lecFilter);
+                filteredMats = state.materials.filter(m => m.category === state.lecFilter);
+            }
+
+            if(filteredLecs.length === 0 && filteredMats.length === 0) {
+                container.innerHTML = `<div class="col-span-full p-12 text-center text-slate-500 bg-white rounded-2xl border border-slate-200 shadow-sm">No course materials found.</div>`;
+                return;
+            }
+
+            let activeLec = filteredLecs.find(l => String(l.id) === String(state.activeLectureId));
+            if (!activeLec && filteredLecs.length > 0) {
+                activeLec = filteredLecs[0];
+                state.activeLectureId = activeLec.id;
+            }
+
+            let playlistHtml = '';
+            filteredLecs.forEach(lec => {
+                const isActive = String(lec.id) === String(state.activeLectureId);
+                const bgClass = isActive ? 'bg-blue-50/50 border-blue-100' : 'bg-white border-transparent hover:bg-slate-50';
+                const textClass = isActive ? 'text-[#02569B]' : 'text-slate-700';
+                
+                playlistHtml += `
+                    <button onclick="playLecture(${lec.id})" class="w-full text-left p-3.5 rounded-xl border transition-colors flex items-center gap-4 ${bgClass}">
+                        <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0 text-[#02569B]">
+                            <svg class="w-3.5 h-3.5 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        </div>
+                        <div>
+                            <h5 class="text-[13px] font-bold ${textClass}">${lec.title}</h5>
+                            <p class="text-[11px] mt-0.5 text-slate-400">Duration: ${lec.duration}</p>
+                        </div>
+                    </button>
+                `;
+            });
+
+            let materialsHtml = '';
+            filteredMats.forEach(mat => {
+                const isPPT = mat.urlFile && (mat.urlFile.includes('.ppt') || mat.title.toLowerCase().includes('ppt'));
+                const iconSvg = isPPT 
+                    ? `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>`
+                    : `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`;
+                    
+                materialsHtml += `
+                    <div class="flex items-center justify-between p-3.5 rounded-xl border border-transparent hover:bg-slate-50 transition-colors group">
+                        <div class="flex items-center gap-3">
+                            <div class="text-red-500 bg-red-50 p-2 rounded-lg shrink-0">
+                                ${iconSvg}
+                            </div>
+                            <div>
+                                <h5 class="text-[13px] font-bold text-slate-800">${mat.title}</h5>
+                                <p class="text-[11px] text-slate-400 mt-0.5">${mat.duration}</p>
+                            </div>
+                        </div>
+                        <a href="${mat.urlFile}" target="_blank" class="bg-[#1e293b] hover:bg-black text-white text-[10px] font-bold px-4 py-2 rounded-lg flex items-center gap-1.5 transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            Open
+                        </a>
+                    </div>
+                `;
+            });
+
+            if (filteredMats.length === 0) materialsHtml = '<p class="text-xs text-slate-400 italic px-2">No documents available.</p>';
+
+            let playerHtml = '';
+            if (activeLec) {
+                const embedUrl = getEmbedUrl(activeLec.urlFile);
+                playerHtml = `
+                    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col w-full relative">
+                        <div class="w-full aspect-video bg-[#2c2c2c] relative">
+                            <a href="${activeLec.urlFile}" target="_blank" class="absolute top-4 left-4 z-20 bg-white/90 hover:bg-white text-slate-800 text-[10px] font-bold tracking-widest uppercase px-3 py-1.5 rounded-md shadow-sm flex items-center gap-1.5 transition-colors" title="Open Video in a New Tab">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                Open External
+                            </a>
+                            <div class="absolute top-4 right-4 z-10 bg-[#ef4444] text-white text-[9px] font-black tracking-widest uppercase px-3 py-1.5 rounded-md shadow-sm">SECURE STREAM</div>
+                            <iframe class="w-full h-full absolute inset-0 z-0" src="${embedUrl}" title="Video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                        </div>
+                        <div class="p-6 flex justify-between items-start bg-white z-10 relative">
+                            <div>
+                                <h3 class="text-xl font-bold text-slate-900 mb-1">${activeLec.title}</h3>
+                                <p class="text-xs text-slate-500 font-medium">Duration: ${activeLec.duration}</p>
+                            </div>
+                            <span class="text-[10px] font-bold text-[#02569B] uppercase tracking-wider bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">${activeLec.category}</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                playerHtml = `<div class="bg-white rounded-[24px] border border-slate-200 shadow-sm flex items-center justify-center aspect-video text-slate-400 font-medium w-full">No active video lecture.</div>`;
+            }
+
+            container.innerHTML = `
+                <div class="lg:col-span-2">
+                    ${playerHtml}
+                </div>
+                <div class="lg:col-span-1 flex flex-col gap-6">
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[350px]">
+                        <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-2 bg-white">
+                            <svg class="w-4 h-4 text-[#02569B]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+                            <h4 class="text-[11px] font-black text-[#02569B] uppercase tracking-wider">VIDEO LECTURES</h4>
+                        </div>
+                        <div class="p-3 overflow-y-auto flex-1 custom-scrollbar space-y-1">
+                            ${playlistHtml}
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col min-h-[200px]">
+                        <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-2 bg-white">
+                            <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                            <h4 class="text-[11px] font-black text-red-500 uppercase tracking-wider">LECTURES PPTS & PDFS</h4>
+                        </div>
+                        <div class="px-5 py-2 bg-slate-50/50 border-b border-slate-100 text-[10px] text-slate-400">Materials are securely blocked from device downloads.</div>
+                        <div class="p-3 overflow-y-auto flex-1 custom-scrollbar space-y-1">
+                            ${materialsHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- ASSIGNMENTS LOGIC ---
+        const categoryColors = {
+            'Digital': 'bg-blue-50 text-blue-700 border-blue-300',
+            'Verilog': 'bg-emerald-50 text-emerald-700 border-emerald-300',
+            'SV': 'bg-purple-50 text-purple-700 border-purple-300',
+            'UVM': 'bg-amber-50 text-amber-700 border-amber-300'
+        };
+
+        window.filterAssignments = function(cat) {
+            state.assFilter = cat;
+            document.querySelectorAll('.ass-filter-btn').forEach(btn => {
+                if(btn.dataset.filter === cat) btn.className = "ass-filter-btn flex-1 px-5 py-2 text-[13px] font-bold rounded-lg bg-white text-[#02569B] shadow-sm transition-all";
+                else btn.className = "ass-filter-btn flex-1 px-5 py-2 text-[13px] font-bold rounded-lg text-slate-500 hover:text-slate-700 transition-all";
+            });
+            renderAssignments();
+        }
+
+        async function handleAddAssignment(e) {
+            e.preventDefault();
+            const title = document.getElementById('ass-title').value;
+            const cat = document.getElementById('ass-cat').value;
+            const marks = document.getElementById('ass-marks').value;
+            const fileInput = document.getElementById('ass-file');
+            
+            if(fileInput.files.length === 0) { alert("Please upload an assignment PDF."); return; }
+            const file = fileInput.files[0];
+            
+            if (file.size > 10 * 1024 * 1024) {
+                alert("File is too large! Maximum allowed size is 10MB.");
+                return;
+            }
+            
+            const filename = file.name;
+
+            const btn = document.getElementById('btn-submit-ass'); 
+            showBuffering("Encoding Assignment PDF...");
+            
+            const fileBase64 = await getBase64(file);
+            const newItem = { id: Date.now(), type: 'Assignment', title, category: cat, durationMarks: marks, urlFile: filename, fileBase64: fileBase64 };
+            
+            showBuffering("Uploading & Publishing Assignment...");
+            try {
+                await apiRequest('/api/lms', { action: 'addLMSItem', item: newItem });
+                await fetchLMSData(true); 
+            } catch(err) { 
+                console.error(err); 
+                hideBuffering();
+            }
+
+            toggleModal('assignment-modal'); e.target.reset(); btn.innerText = "Publish Assignment";
+        }
+
+        function renderAssignments() {
+            const container = document.getElementById('assignment-list');
+            container.innerHTML = '';
+
+            let filteredAss = state.assignments;
+            if (state.assFilter && state.assFilter !== 'All') filteredAss = state.assignments.filter(a => a.category === state.assFilter);
+            if(filteredAss.length === 0) {
+                container.innerHTML = `<div class="p-8 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">No assignments found for this category.</div>`; return;
+            }
+
+            let html = `
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-4 whitespace-nowrap">Title & Resource</th>
+                                <th class="px-6 py-4 whitespace-nowrap">Category</th>
+                                <th class="px-6 py-4 whitespace-nowrap">Marks</th>
+                                <th class="px-6 py-4 text-right whitespace-nowrap">Status / Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-sm">
+            `;
+
+            filteredAss.forEach(ass => {
+                const catClass = categoryColors[ass.category] || 'bg-slate-50 text-slate-700 border-slate-300';
+                let actionHtml = ''; let detailsHtml = '';
+
+                if(state.user.role === 'student') {
+                    const sub = ass.submissions.find(s => String(s.studentEmail).toLowerCase() === state.user.email.toLowerCase());
+                    if(sub) {
+                        let marksHtml = '';
+                        let remarksHtml = '';
+                        if (sub.marks !== undefined && sub.marks !== null && sub.marks !== "") {
+                            marksHtml = `<div class="text-[13px] font-black text-slate-800 code-font">${sub.marks} / ${ass.maxMarks} pts</div>`;
+                            if (sub.remarks) {
+                                remarksHtml = `<div class="text-[12px] text-slate-500 italic max-w-[200px] truncate" title="${sub.remarks}"><strong>Remarks:</strong> ${sub.remarks}</div>`;
+                            }
+                        } else {
+                            marksHtml = `<div class="text-[12px] font-bold text-slate-400 italic">Pending Grade</div>`;
+                        }
+
+                        actionHtml = `
+                            <div class="flex flex-col items-end gap-2">
+                                <span class="px-4 py-1.5 rounded-full text-[11px] font-bold bg-[#ecfdf5] text-[#10b981] border border-[#a7f3d0] shadow-sm">Submitted</span>
+                                <div class="flex items-center gap-3">
+                                    ${remarksHtml}
+                                    ${marksHtml}
+                                </div>
+                            </div>`;
+                    } else {
+                        actionHtml = `
+                            <label class="cursor-pointer bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 px-5 py-2.5 rounded-full text-[13px] font-bold shadow-sm inline-block whitespace-nowrap transition-colors" id="lbl-${ass.id}">
+                                <span id="lbl-text-${ass.id}">Submit PDF (1 Attempt)</span>
+                                <input type="file" id="file-${ass.id}" class="hidden" accept=".pdf" onchange="submitAssignment('${ass.title}', '${ass.id}')">
+                            </label>
+                        `;
+                    }
+                } else {
+                    let subListHtml = ass.submissions.length === 0 ? '<p class="text-xs text-slate-400 italic pl-4">No submissions yet.</p>' : '';
+                    ass.submissions.forEach(sub => {
+                        const isGraded = (sub.marks !== undefined && sub.marks !== null && sub.marks !== "");
+                        
+                        const gradeStatus = isGraded 
+                            ? `<span class="text-[#10b981] font-black text-[13px] bg-[#ecfdf5] px-3 py-1.5 rounded border border-[#a7f3d0] code-font tracking-wide">${sub.marks} / ${ass.maxMarks} pts</span>` 
+                            : `<button onclick="openGradeModal('${ass.title}', '${sub.studentEmail}')" class="text-xs btn-secondary px-4 py-1.5 rounded-lg border border-[#bbdefb]">Grade</button>`;
+                        
+                        subListHtml += `
+                            <div class="flex items-center justify-between text-[13px] py-3 border-b border-slate-100 last:border-0 pl-4 pr-2 hover:bg-slate-50 transition-colors">
+                                <span class="text-slate-700 font-medium">${sub.studentEmail}</span>
+                                <div class="flex items-center gap-6">
+                                    <a href="${sub.filename}" target="_blank" class="text-[#02569B] hover:underline font-bold flex items-center gap-1.5 transition-colors" title="Download ${sub.filename}"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> PDF</a>
+                                    ${gradeStatus}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    detailsHtml = `<div class="mt-4 pt-4 border-t border-slate-100 w-full max-w-3xl"><h5 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 pl-4">Submissions (${ass.submissions.length})</h5>${subListHtml}</div>`;
+                    actionHtml = `<span class="text-xs text-slate-500 font-medium whitespace-nowrap">${ass.submissions.length} Submissions</span>`;
+                }
+
+                html += `
+                    <tr class="hover:bg-slate-50/50 transition-colors align-top">
+                        <td class="px-6 py-5">
+                            <h3 class="text-[15px] font-bold text-slate-800 mb-1.5">${ass.title}</h3>
+                            <a href="${ass.filename}" target="_blank" class="text-[12px] font-medium text-[#02569B] hover:underline flex items-center gap-1.5 w-fit transition-colors">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                Instructor Resource
+                            </a>
+                            ${detailsHtml}
+                        </td>
+                        <td class="px-6 py-5 pt-6"><span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${catClass}">${ass.category}</span></td>
+                        <td class="px-6 py-5 pt-6 code-font text-slate-500 text-[13px]">${ass.maxMarks} pts</td>
+                        <td class="px-6 py-5 pt-5 text-right flex flex-col items-end justify-start min-h-full">${actionHtml}</td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table></div></div>`; container.innerHTML = html;
+        }
+
+        window.submitAssignment = async function(title, assId) {
+            const inputEl = document.getElementById(`file-${assId}`);
+            if(!inputEl || inputEl.files.length === 0) return;
+            
+            const file = inputEl.files[0];
+            
+            if (file.size > 10 * 1024 * 1024) {
+                alert("File is too large! Maximum allowed size is 10MB. Please compress your PDF.");
+                inputEl.value = "";
+                return;
+            }
+
+            const label = document.getElementById(`lbl-${assId}`);
+            const spanText = document.getElementById(`lbl-text-${assId}`);
+            const originalText = spanText.innerHTML;
+            
+            inputEl.disabled = true;
+            label.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            showBuffering("Encoding Submission...");
+
+            try {
+                const base64Data = await getBase64(file);
+                showBuffering("Uploading Solution to Cloud...");
+                
+                await apiRequest('/api/lms', { 
+                    action: 'submitLMSAssignment', 
+                    title: title, 
+                    email: state.user.email, 
+                    filename: file.name,
+                    fileBase64: base64Data
+                });
+                
+                await fetchLMSData(true); 
+                hideBuffering();
+                alert(`Solution "${file.name}" uploaded successfully!`);
+                
+            } catch (err) { 
+                console.error(err); 
+                hideBuffering();
+                spanText.innerHTML = originalText;
+                inputEl.disabled = false;
+                label.classList.remove('opacity-50', 'cursor-not-allowed');
+                inputEl.value = "";
+                alert(err.message || "Network error occurred during submission.");
+            }
+        };
+
+        window.openGradeModal = function(title, studentEmail) {
+            const ass = state.assignments.find(a => String(a.title) === String(title));
+            document.getElementById('grade-ass-id').value = title; 
+            document.getElementById('grade-student-email').value = studentEmail;
+            document.getElementById('grade-max').innerText = ass.maxMarks; 
+            document.getElementById('grade-student-display').innerText = studentEmail;
+            
+            const sub = ass.submissions.find(s => s.studentEmail === studentEmail);
+            document.getElementById('grade-download-link').href = sub ? sub.filename : "#";
+            
+            document.getElementById('grade-marks').max = ass.maxMarks; 
+            document.getElementById('grade-marks').value = ''; 
+            document.getElementById('grade-remarks').value = '';
+            toggleModal('grade-modal');
+        };
+
+        window.handleGradeSubmit = async function(e) {
+            e.preventDefault();
+            const title = document.getElementById('grade-ass-id').value; 
+            const studentEmail = document.getElementById('grade-student-email').value;
+            const marks = document.getElementById('grade-marks').value; 
+            const remarks = document.getElementById('grade-remarks').value;
+            const btn = document.getElementById('btn-save-grade'); 
+            
+            showBuffering("Saving Grades to Database...");
+
+            try {
+                await apiRequest('/api/lms', { action: 'gradeLMSAssignment', title: title, email: studentEmail, marks: marks, remarks: remarks });
+                await fetchLMSData(true); 
+            } catch (err) { 
+                console.error(err); 
+                alert(err.message || "Error saving grade.");
+            } finally {
+                hideBuffering();
+            }
+            toggleModal('grade-modal'); btn.innerText = "Save Grade";
+        };
+
+        // --- CERTIFICATES LOGIC ---
+        async function handleIssueCertificate(e) {
+            e.preventDefault();
+            const email = document.getElementById('cert-email').value;
+            const title = document.getElementById('cert-title').value;
+            const fileInput = document.getElementById('cert-file');
+            const date = new Date().toLocaleDateString();
+            
+            if(fileInput.files.length === 0) { alert("Please attach a certificate PDF."); return; }
+            const file = fileInput.files[0];
+            
+            if (file.size > 10 * 1024 * 1024) {
+                alert("File is too large! Maximum allowed size is 10MB.");
+                return;
+            }
+
+            const btn = document.getElementById('btn-submit-cert');
+            
+            showBuffering("Encoding Certificate PDF...");
+            const fileBase64 = await getBase64(file);
+            
+            showBuffering("Issuing Certificate...");
+            try {
+                await apiRequest('/api/lms', { action: 'issueCertificate', email: email, title: title, date: date, fileBase64: fileBase64 });
+                await fetchLMSData(true); e.target.reset();
+            } catch (err) { 
+                console.error(err); 
+                alert(err.message || "Failed to issue certificate.");
+            } finally {
+                hideBuffering();
+            }
+            btn.innerText = "Issue Certificate";
+        }
+
+        function renderCertificates() {
+            const grid = document.getElementById('certificates-grid');
+            grid.innerHTML = '';
+            let toRender = state.certificates;
+
+            if (state.user.role === 'student') {
+                toRender = state.certificates.filter(c => String(c.studentEmail).toLowerCase() === state.user.email.toLowerCase());
+            }
+
+            if (toRender.length === 0) {
+                grid.innerHTML = `<div class="col-span-full p-12 text-center text-slate-500 bg-white rounded-2xl border border-slate-200">No certificates available.</div>`;
+                return;
+            }
+
+            toRender.forEach(cert => {
+                const subtext = state.user.role === 'admin' ? cert.studentEmail : `Issued: ${cert.issueDate}`;
+                grid.innerHTML += `
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between hover:-translate-y-1 transition-transform">
+                        <div>
+                            <div class="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500 mb-4 text-2xl">🏆</div>
+                            <h4 class="text-lg font-bold text-slate-800 mb-1 leading-tight">${cert.title}</h4>
+                            <p class="text-xs font-medium text-slate-500 mb-6">${subtext}</p>
+                        </div>
+                        <a href="${cert.url}" target="_blank" class="w-full text-center py-2.5 rounded-lg border border-[#02569B] text-[#02569B] text-sm font-bold hover:bg-blue-50 transition-colors">
+                            View Certificate
+                        </a>
+                    </div>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>
