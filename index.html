@@ -34,16 +34,29 @@
         .nav-item.active { background-color: #e3f2fd; color: #02569B; border-left-color: #02569B; font-weight: 600; }
 
         .bg-dot-grid { background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px); background-size: 24px 24px; }
+
+        /* Classic Spinner */
+.classic-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3; /* Light grey */
+    border-top: 5px solid #02569B; /* LogicSilicon Brand Blue */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
     </style>
 </head>
 <body>
 
     <!-- GLOBAL BUFFERING OVERLAY -->
+
     <div id="global-buffering" class="hidden fixed inset-0 z-[999] bg-slate-900/80 backdrop-blur-md flex-col items-center justify-center">
-        <div class="relative w-24 h-24 mb-6">
-            <div class="absolute inset-0 border-4 border-sky-500/20 rounded-full"></div>
-            <div class="absolute inset-0 border-4 border-[#02569B] rounded-full border-t-transparent animate-spin"></div>
-        </div>
+        <div class="classic-spinner mb-6"></div>
         <h3 class="text-white text-2xl font-extrabold tracking-widest uppercase animate-pulse">Buffering Data</h3>
         <p class="text-slate-400 text-sm mt-2 font-medium" id="buffering-text">Synchronizing with Database...</p>
     </div>
@@ -353,7 +366,7 @@
                     <h2 class="text-3xl font-display font-bold text-slate-800 mb-4 tracking-tight">Tests</h2>
                     <div class="bg-white p-12 rounded-2xl border border-slate-200 text-center shadow-sm">
                         <p class="text-slate-500 text-lg mb-6">All formal tests are conducted via the isolated Assessment Engine.</p>
-                        <a href="https://assessment.logicsilicon.in" target="_blank" class="btn-secondary px-8 py-3 rounded-full inline-block">Go to Assessment Portal</a>
+                        <button onclick="goToAssessment()" class="btn-secondary px-8 py-3 rounded-full inline-block">Go to Assessment Portal</button>
                     </div>
                 </div>
 
@@ -595,6 +608,20 @@
                 codeEl.style.opacity = 1;
             }, 500);
         }
+        function goToAssessment() {
+    const token = localStorage.getItem('ls_jwt_token');
+    const user = localStorage.getItem('ls_lms_user');
+
+    if (token && user) {
+        // Encode the user object to pass it safely in the URL
+        const encodedUser = encodeURIComponent(user);
+        // Pass token and user data as URL parameters
+        window.open(`C:/Users/akash/Downloads/index.html?token=${token}&user=${encodedUser}`, '_blank');
+    } else {
+        // Fallback if they somehow click it without being logged in
+        window.open('C:/Users/akash/Downloads/index.html', '_blank');
+    }
+}
 
         // GLOBAL BUFFERING UI LOGIC
         function showBuffering(msg = "Synchronizing with Database...") {
@@ -1026,7 +1053,7 @@ window.selectLecture = function(id) {
 }
 
 // Variable to store the player instance
-// --- INLINE YOUTUBE PLAYER LOGIC ---
+// --- INLINE PLAYER LOGIC (YOUTUBE + GOOGLE DRIVE) ---
         let inlinePlayer = null;
         let watermarkInterval = null;
 
@@ -1036,9 +1063,15 @@ window.selectLecture = function(id) {
             return match ? match[1] : null;
         }
 
+        // New Helper to extract Google Drive File ID
+        function getDriveId(url) {
+            if (!url) return null;
+            let match = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+            return match ? match[1] : null;
+        }
+
         window.selectLecture = function(id) {
             state.activeLectureId = id;
-            // Stop the current video if they click a different lecture in the sidebar
             if (inlinePlayer && typeof inlinePlayer.stopVideo === 'function') {
                 inlinePlayer.stopVideo(); 
             }
@@ -1049,9 +1082,13 @@ window.selectLecture = function(id) {
             const activeLec = state.lectures.find(l => String(l.id) === String(state.activeLectureId));
             if (!activeLec) return;
 
-            const ytId = extractYouTubeID(activeLec.url || activeLec.urlFile);
-            if (!ytId) {
-                alert("Invalid YouTube link. Secure stream requires a valid YouTube URL.");
+            const videoUrl = activeLec.url || activeLec.urlFile;
+            const ytId = extractYouTubeID(videoUrl);
+            const driveId = getDriveId(videoUrl);
+
+            // Validate Link
+            if (!ytId && !driveId) {
+                alert("Invalid link. Please provide a valid YouTube or Google Drive link.");
                 return;
             }
 
@@ -1078,47 +1115,70 @@ window.selectLecture = function(id) {
                 wmEl.style.transform = `translate(${xOffset}px, ${yOffset}px) rotate(-12deg)`;
             }, 5000);
 
-            // Load YouTube Player with Event Listeners
-            if (inlinePlayer) {
-                inlinePlayer.loadVideoById(ytId);
-            } else {
-                inlinePlayer = new YT.Player('yt-player-div', {
-                    height: '100%',
-                    width: '100%',
-                    videoId: ytId,
-                    host: 'https://www.youtube-nocookie.com',
-                    playerVars: {
-                        'autoplay': 1, 'controls': 1, 'modestbranding': 1,
-                        'rel': 0, 'disablekb': 1, 'fs': 1,
-                        'origin': window.location.origin 
-                    },
-                    events: {
-                        'onStateChange': function(event) {
-                            // 1 = Playing, 3 = Buffering. Hide spinner when video is ready!
-                            if (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.BUFFERING) {
-                                const sp = document.getElementById('yt-loading-spinner');
-                                if(sp) { sp.classList.add('hidden'); sp.classList.remove('flex'); }
-                            }
+            const playerDiv = document.getElementById('yt-player-div');
+
+            // --- YOUTUBE LOGIC ---
+            if (ytId) {
+                if (inlinePlayer && typeof inlinePlayer.loadVideoById === 'function') {
+                    inlinePlayer.loadVideoById(ytId);
+                } else {
+                    playerDiv.innerHTML = ''; // Clear div
+                    inlinePlayer = new YT.Player('yt-player-div', {
+                        height: '100%',
+                        width: '100%',
+                        videoId: ytId,
+                        host: 'https://www.youtube-nocookie.com',
+                        playerVars: {
+                            'autoplay': 1, 'controls': 1, 'modestbranding': 1,
+                            'rel': 0, 'disablekb': 1, 'fs': 1,
+                            'origin': window.location.origin 
                         },
-                        'onError': function(event) {
-                            // Hide Spinner, Show Error Screen
-                            const sp = document.getElementById('yt-loading-spinner');
-                            const err = document.getElementById('yt-error-message');
-                            const errTxt = document.getElementById('yt-error-text');
-                            
-                            if(sp) { sp.classList.add('hidden'); sp.classList.remove('flex'); }
-                            if(err) { err.classList.remove('hidden'); err.classList.add('flex'); }
-                            
-                            // Decode YouTube Error Codes
-                            let msg = "An unknown error occurred while contacting YouTube.";
-                            if (event.data === 2) msg = "The video URL contains an invalid parameter.";
-                            if (event.data === 100) msg = "This video was removed or made private.";
-                            if (event.data === 101 || event.data === 150) msg = "The owner has disabled embedding for this video.";
-                            
-                            if(errTxt) errTxt.innerText = msg;
+                        events: {
+                            'onStateChange': function(event) {
+                                if (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.BUFFERING) {
+                                    if(spinner) { spinner.classList.add('hidden'); spinner.classList.remove('flex'); }
+                                }
+                            },
+                            'onError': function(event) {
+                                if(spinner) { spinner.classList.add('hidden'); spinner.classList.remove('flex'); }
+                                if(errScreen) { errScreen.classList.remove('hidden'); errScreen.classList.add('flex'); }
+                                const errTxt = document.getElementById('yt-error-text');
+                                if(errTxt) errTxt.innerText = "An error occurred while contacting YouTube.";
+                            }
                         }
-                    }
-                });
+                    });
+                }
+            } 
+            // --- GOOGLE DRIVE LOGIC ---
+            else if (driveId) {
+                // Destroy existing YT player if swapping formats
+                if (inlinePlayer && typeof inlinePlayer.destroy === 'function') {
+                    inlinePlayer.destroy();
+                    inlinePlayer = null;
+                }
+                
+                playerDiv.innerHTML = ''; // Clear container
+                
+                // Create Drive Iframe
+                const iframe = document.createElement('iframe');
+                iframe.src = `https://drive.google.com/file/d/${driveId}/preview`;
+                iframe.className = "w-full h-full absolute inset-0 z-10 pointer-events-auto border-none bg-black";
+                iframe.allow = "autoplay; fullscreen";
+                
+                // Hide spinner when the iframe finishes loading
+                iframe.onload = function() {
+                    if(spinner) { spinner.classList.add('hidden'); spinner.classList.remove('flex'); }
+                };
+
+                // Show error if iframe fails to load entirely
+                iframe.onerror = function() {
+                    if(spinner) { spinner.classList.add('hidden'); spinner.classList.remove('flex'); }
+                    if(errScreen) { errScreen.classList.remove('hidden'); errScreen.classList.add('flex'); }
+                    const errTxt = document.getElementById('yt-error-text');
+                    if(errTxt) errTxt.innerText = "Failed to load video from Google Drive. Ensure the sharing settings are set to 'Anyone with the link'.";
+                };
+
+                playerDiv.appendChild(iframe);
             }
         }
 
@@ -1176,6 +1236,9 @@ window.selectLecture = function(id) {
                 await fetchLMSData(true); 
             } catch(err) { 
                 console.error(err); 
+                alert("Error publishing material. Please try again.");
+            } finally {
+                // BUG FIX: Hide buffering when done
                 hideBuffering();
             }
 
@@ -1381,6 +1444,9 @@ window.selectLecture = function(id) {
                 await fetchLMSData(true); 
             } catch(err) { 
                 console.error(err); 
+                alert("Error publishing assignment. Please try again.");
+            } finally {
+                // BUG FIX: Hide buffering when done
                 hideBuffering();
             }
 
