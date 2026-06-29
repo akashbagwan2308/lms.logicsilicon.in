@@ -53,12 +53,14 @@
 </head>
 <body>
 
-    <!-- GLOBAL BUFFERING OVERLAY -->
 
+<!-- GLOBAL BUFFERING OVERLAY -->
     <div id="global-buffering" class="hidden fixed inset-0 z-[999] bg-slate-900/80 backdrop-blur-md flex-col items-center justify-center">
         <div class="classic-spinner mb-6"></div>
         <h3 class="text-white text-2xl font-extrabold tracking-widest uppercase animate-pulse">Buffering Data</h3>
         <p class="text-slate-400 text-sm mt-2 font-medium" id="buffering-text">Synchronizing with Database...</p>
+        <!-- NEW TIMER ELEMENT -->
+        <div id="buffering-timer" class="hidden text-sky-400 text-xl font-mono mt-3 font-bold tracking-widest">0.0s</div>
     </div>
 
     <div id="login-view" class="view active h-screen w-full relative overflow-y-auto overflow-x-hidden bg-[#090E17]">
@@ -374,7 +376,7 @@
                 <div id="tab-profile" class="tab-content">
                     <h2 class="text-3xl font-display font-bold text-slate-800 mb-6 tracking-tight">My Profile</h2>
                     <div class="bg-white rounded-[24px] border border-slate-200 shadow-sm overflow-hidden mb-6 relative">
-                        <div class="h-36 bg-gradient-to-r from-[#02569B] to-[#38bdf8]"></div>
+                        <div class="h-28 bg-gradient-to-r from-[#02569B] to-[#38bdf8]"></div>
                         <div class="px-10 pb-10 relative">
                             <div class="absolute -top-14 left-10">
                                 <div class="w-28 h-28 rounded-full bg-gradient-to-br from-[#02569B] to-[#38bdf8] border-4 border-white shadow-lg flex items-center justify-center text-white text-4xl font-bold" id="profile-avatar">A</div>
@@ -624,19 +626,43 @@
 }
 
         // GLOBAL BUFFERING UI LOGIC
-        function showBuffering(msg = "Synchronizing with Database...") {
+// --- GLOBAL BUFFERING UI LOGIC (UPDATED WITH TIMER) ---
+        let bufferingInterval = null;
+        let bufferingStartTime = 0;
+
+        function showBuffering(msg = "Synchronizing with Database...", showTimer = false) {
             document.getElementById('buffering-text').innerText = msg;
-            document.getElementById('global-buffering').classList.remove('hidden');
-            document.getElementById('global-buffering').classList.add('flex');
+            const overlay = document.getElementById('global-buffering');
+            const timerEl = document.getElementById('buffering-timer');
+            
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+
+            if (bufferingInterval) clearInterval(bufferingInterval);
+            
+            if (showTimer) {
+                timerEl.classList.remove('hidden');
+                bufferingStartTime = Date.now();
+                timerEl.innerText = "0.0s";
+                bufferingInterval = setInterval(() => {
+                    timerEl.innerText = ((Date.now() - bufferingStartTime) / 1000).toFixed(1) + "s";
+                }, 100);
+            } else {
+                timerEl.classList.add('hidden');
+            }
         }
 
         function hideBuffering() {
+            if (bufferingInterval) clearInterval(bufferingInterval);
             document.getElementById('global-buffering').classList.add('hidden');
             document.getElementById('global-buffering').classList.remove('flex');
         }
 
-        // --- SESSION RECOVERY ON LOAD ---
+        // --- SESSION RECOVERY ON LOAD & WAKE-UP PING ---
         window.onload = async () => {
+            // WAKE UP PING: Fire a background request to Render immediately to start bootup
+            fetch(`${NODE_BACKEND_URL}`).catch(() => { /* Fire and forget silently */ });
+
             setInterval(cycleHeroContent, 5000);
 
             const savedSession = localStorage.getItem('ls_lms_user');
@@ -655,7 +681,8 @@
                     updateProfileUI(state.user.email, state.user.id, state.user.batch || "Loading...");
                     setupRoleUI();
                     
-                    showBuffering("Restoring Session & Fetching Data...");
+                    // Show buffering WITH timer while dashboard sits behind it
+                    showBuffering("Restoring Session & Fetching Data...", true);
                     await fetchLMSData(true); 
                     hideBuffering();
                     
@@ -667,6 +694,8 @@
                 }
             }
         };
+
+
 
         // --- BASE64 HELPER ---
         function getBase64(file) {
@@ -726,7 +755,7 @@
             const errorText = document.getElementById('login-error-text');
             const originalText = btn.innerText;
             
-            showBuffering("Authenticating User...");
+            // Note: NO showBuffering() here. Just button state.
             btn.innerText = "Verifying...";
             btn.disabled = true;
             errorDiv.classList.add('hidden');
@@ -741,6 +770,7 @@
                     localStorage.setItem('ls_lms_user', JSON.stringify(state.user));
                     localStorage.setItem('ls_jwt_token', data.token); // Store JWT securely
                     
+                    // 1. Immediately transition to the Dashboard UI Skeleton
                     document.getElementById('login-view').classList.remove('active');
                     document.getElementById('dashboard-view').classList.add('active');
                     
@@ -750,18 +780,20 @@
                     updateProfileUI(email, userId, data.batch);
                     setupRoleUI();
                     
-                    showBuffering("Loading Portal Data...");
+                    // 2. Show buffering WITH seconds timer
+                    showBuffering("Loading Portal Data...", true);
+                    
+                    // 3. Fetch data in the background (browser paints the dashboard while this awaits)
                     await fetchLMSData(true); 
                     
+                    // 4. Reveal fully loaded dashboard
                     hideBuffering();
                     switchTab('overview');
                 } else {
-                    hideBuffering();
                     errorText.innerText = data.message || "Invalid credentials. Please verify your access.";
                     errorDiv.classList.remove('hidden');
                 }
             } catch(err) {
-                hideBuffering();
                 errorText.innerText = "Network error. Please ensure the Render backend is running.";
                 errorDiv.classList.remove('hidden');
             } finally {
@@ -783,12 +815,21 @@
             document.getElementById('profile-batch-sub').innerText = batch || "Loading...";
         }
 
-        function logout() {
-            localStorage.removeItem('ls_lms_user');
-            localStorage.removeItem('ls_jwt_token');
+function logout() {
+            // 1. Completely wipe all local and session storage data
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            // 2. Reset the internal application state
             state.user = null;
+            state.activeLectureId = null;
+            
+            // 3. Swap the views back to the login screen
             document.getElementById('dashboard-view').classList.remove('active');
             document.getElementById('login-view').classList.add('active');
+            
+            // 4. Clear the login form inputs for security
+            document.getElementById('auth-email').value = ''; 
             document.getElementById('auth-password').value = '';
         }
 
@@ -1287,31 +1328,32 @@ window.selectLecture = function(id) {
                 `;
             });
 
-            let materialsHtml = '';
-            filteredMats.forEach(mat => {
-                const isPPT = mat.urlFile && (mat.urlFile.includes('.ppt') || mat.title.toLowerCase().includes('ppt'));
-                const iconSvg = isPPT 
-                    ? `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>`
-                    : `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`;
-                    
-                materialsHtml += `
-                    <div class="flex items-center justify-between p-3.5 rounded-xl border border-transparent hover:bg-slate-50 transition-colors group">
-                        <div class="flex items-center gap-3">
-                            <div class="text-red-500 bg-red-50 p-2 rounded-lg shrink-0">
-                                ${iconSvg}
-                            </div>
-                            <div>
-                                <h5 class="text-[13px] font-bold text-slate-800">${mat.title}</h5>
-                                <p class="text-[11px] text-slate-400 mt-0.5">${mat.duration}</p>
-                            </div>
-                        </div>
-                        <a href="${mat.urlFile}" target="_blank" class="bg-[#1e293b] hover:bg-black text-white text-[10px] font-bold px-4 py-2 rounded-lg flex items-center gap-1.5 transition-colors">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                            Open
-                        </a>
-                    </div>
-                `;
-            });
+           let materialsHtml = '';
+filteredMats.forEach(mat => {
+    // CHANGED: mat.urlFile -> mat.url
+    const isPPT = mat.url && (mat.url.includes('.ppt') || mat.title.toLowerCase().includes('ppt'));
+    const iconSvg = isPPT 
+        ? `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>`
+        : `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`;
+        
+    materialsHtml += `
+        <div class="flex items-center justify-between p-3.5 rounded-xl border border-transparent hover:bg-slate-50 transition-colors group">
+            <div class="flex items-center gap-3">
+                <div class="text-red-500 bg-red-50 p-2 rounded-lg shrink-0">
+                    ${iconSvg}
+                </div>
+                <div>
+                    <h5 class="text-[13px] font-bold text-slate-800">${mat.title}</h5>
+                    <p class="text-[11px] text-slate-400 mt-0.5">${mat.duration}</p>
+                </div>
+            </div>
+            <a href="${mat.url}" target="_blank" class="bg-[#1e293b] hover:bg-black text-white text-[10px] font-bold px-4 py-2 rounded-lg flex items-center gap-1.5 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                Open
+            </a>
+        </div>
+    `;
+});
 
             if (filteredMats.length === 0) materialsHtml = '<p class="text-xs text-slate-400 italic px-2">No documents available.</p>';
 
