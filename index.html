@@ -224,17 +224,17 @@
                                         <div>
                                             <span class="text-[11px] font-bold text-sky-200 uppercase tracking-wider block mb-1">Pending Tasks</span>
                                             <span class="text-5xl font-black tracking-tight" id="overview-pending-count">0</span>
-                        </div>
+                                        </div>
                                         <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
                                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
+                                        </div>
                                     </div>
                                     <div class="relative z-10">
                                         <span class="inline-flex items-center gap-1.5 text-xs font-semibold bg-white/20 px-3 py-1.5 rounded-lg backdrop-blur-sm">
                                             <span class="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></span> <span id="overview-pending-text">Requires your action</span>
                                         </span>
-                        </div>
-                    </div>
+                                    </div>
+                                </div>
 
                                 <!-- Clean White Card -->
                                 <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between transition-transform hover:-translate-y-1 hover:shadow-md">
@@ -1514,6 +1514,7 @@ filteredMats.forEach(mat => {
                                 <th class="px-6 py-4 whitespace-nowrap">Title & Resource</th>
                                 <th class="px-6 py-4 whitespace-nowrap">Category</th>
                                 <th class="px-6 py-4 whitespace-nowrap">Marks</th>
+                                <th class="px-6 py-4 whitespace-nowrap">Remarks</th>
                                 <th class="px-6 py-4 text-right whitespace-nowrap">Status / Action</th>
                             </tr>
                         </thead>
@@ -1523,16 +1524,16 @@ filteredMats.forEach(mat => {
             filteredAss.forEach(ass => {
                 const catClass = categoryColors[ass.category] || 'bg-slate-50 text-slate-700 border-slate-300';
                 let actionHtml = ''; let detailsHtml = '';
+                let marksHtml = `${ass.maxMarks} pts`;
+                let remarksHtml = '-';
 
                 if(state.user.role === 'student') {
                     const sub = ass.submissions.find(s => String(s.studentEmail).toLowerCase() === state.user.email.toLowerCase());
                     if(sub) {
-                        let marksHtml = '';
-                        let remarksHtml = '';
                         if (sub.marks !== undefined && sub.marks !== null && sub.marks !== "") {
                             marksHtml = `<div class="text-[13px] font-black text-slate-800 code-font">${sub.marks} / ${ass.maxMarks} pts</div>`;
                             if (sub.remarks) {
-                                remarksHtml = `<div class="text-[12px] text-slate-500 italic max-w-[200px] truncate" title="${sub.remarks}"><strong>Remarks:</strong> ${sub.remarks}</div>`;
+                                remarksHtml = `<div class="text-[12px] text-slate-500 italic max-w-[1000px] truncate" title="${sub.remarks}">${sub.remarks}</div>`;
                             }
                         } else {
                             marksHtml = `<div class="text-[12px] font-bold text-slate-400 italic">Pending Grade</div>`;
@@ -1541,10 +1542,6 @@ filteredMats.forEach(mat => {
                         actionHtml = `
                             <div class="flex flex-col items-end gap-2">
                                 <span class="px-4 py-1.5 rounded-full text-[11px] font-bold bg-[#ecfdf5] text-[#10b981] border border-[#a7f3d0] shadow-sm">Submitted</span>
-                                <div class="flex items-center gap-3">
-                                    ${remarksHtml}
-                                    ${marksHtml}
-                                </div>
                             </div>`;
                     } else {
                         actionHtml = `
@@ -1583,12 +1580,13 @@ filteredMats.forEach(mat => {
                             <h3 class="text-[15px] font-bold text-slate-800 mb-1.5">${ass.title}</h3>
                             <a href="${ass.filename}" target="_blank" class="text-[12px] font-medium text-[#02569B] hover:underline flex items-center gap-1.5 w-fit transition-colors">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                Instructor Resource
+                                Assignment Resource
                             </a>
                             ${detailsHtml}
                         </td>
                         <td class="px-6 py-5 pt-6"><span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${catClass}">${ass.category}</span></td>
-                        <td class="px-6 py-5 pt-6 code-font text-slate-500 text-[13px]">${ass.maxMarks} pts</td>
+                        <td class="px-6 py-5 pt-6 code-font text-slate-500 text-[13px]">${marksHtml}</td>
+                        <td class="px-6 py-5 pt-6 text-slate-500 text-[13px]">${remarksHtml}</td>
                         <td class="px-6 py-5 pt-5 text-right flex flex-col items-end justify-start min-h-full">${actionHtml}</td>
                     </tr>
                 `;
