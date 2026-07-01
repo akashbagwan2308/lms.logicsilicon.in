@@ -687,30 +687,39 @@
             });
         }
 
-        // --- SECURE API REQUEST WRAPPER ---
-        async function apiRequest(endpoint, payload) {
-            const token = localStorage.getItem('ls_jwt_token');
-            if (!token && endpoint !== '/login') {
-                logout();
-                throw new Error("No authentication token found.");
-            }
-            
-            const headers = { 'Content-Type': 'application/json' };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
+       // --- SECURE API REQUEST WRAPPER ---
+async function apiRequest(endpoint, payload) {
+    const token = localStorage.getItem('ls_jwt_token');
+    
+    if (!token && endpoint !== '/login') {
+        logout();
+        throw new Error("No authentication token found.");
+    }
+    
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
 
-            const res = await fetch(`${NODE_BACKEND_URL}${endpoint}`, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify(payload)
-            });
+    const res = await fetch(`${NODE_BACKEND_URL}${endpoint}`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(payload)
+    });
 
-            if (res.status === 401 || res.status === 403) {
-                logout();
-                throw new Error("Session expired. Please log in again.");
-            }
+    // Don't treat a 401 on the /login route as an expired session
+    if ((res.status === 401 || res.status === 403) && endpoint !== '/login') {
+        logout();
+        throw new Error("Session expired. Please log in again.");
+    }
 
-            return res.json();
-        }
+    const data = await res.json();
+
+    // If the HTTP status is an error (like 401, 404, 500), throw the backend's message
+    if (!res.ok) {
+        throw new Error(data.message || "Invalid credentials.");
+    }
+
+    return data;
+}
 
         // --- AUTH & CORE ---
         function setAuthRole(role) {
@@ -727,60 +736,61 @@
         }
 
         async function handleLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('auth-email').value;
-            const authString = document.getElementById('auth-password').value;
-            const btn = e.target.querySelector('button[type="submit"]');
-            const errorDiv = document.getElementById('login-error');
-            const errorText = document.getElementById('login-error-text');
-            const originalText = btn.innerText;
-            
-            // Note: NO showBuffering() here. Just button state.
-            btn.innerText = "Verifying...";
-            btn.disabled = true;
-            errorDiv.classList.add('hidden');
+    e.preventDefault();
+    const email = document.getElementById('auth-email').value;
+    const authString = document.getElementById('auth-password').value;
+    const btn = e.target.querySelector('button[type="submit"]');
+    const errorDiv = document.getElementById('login-error');
+    const errorText = document.getElementById('login-error-text');
+    const originalText = btn.innerText;
+    
+    btn.innerText = "Verifying...";
+    btn.disabled = true;
+    errorDiv.classList.add('hidden');
 
-            try {
-                const data = await apiRequest('/login', { role: state.role, email: email, authString: authString });
-                
-                if (data.status === 'success') {
-                    const userId = state.role === 'student' ? authString : 'ADMIN';
-                    state.user = { email: email, role: state.role, id: userId, batch: data.batch };
-                    
-                    localStorage.setItem('ls_lms_user', JSON.stringify(state.user));
-                    localStorage.setItem('ls_jwt_token', data.token); // Store JWT securely
-                    
-                    // 1. Immediately transition to the Dashboard UI Skeleton
-                    document.getElementById('login-view').classList.remove('active');
-                    document.getElementById('dashboard-view').classList.add('active');
-                    
-                    document.getElementById('user-email-display').innerText = email;
-                    document.getElementById('user-role-display').innerText = state.role === 'admin' ? 'Instructor' : 'Student';
-                    
-                    updateProfileUI(email, userId, data.batch);
-                    setupRoleUI();
-                    
-                    // 2. Show buffering WITH seconds timer
-                    showBuffering("Loading Portal Data...", true);
-                    
-                    // 3. Fetch data in the background (browser paints the dashboard while this awaits)
-                    await fetchLMSData(true); 
-                    
-                    // 4. Reveal fully loaded dashboard
-                    hideBuffering();
-                    switchTab('overview');
-                } else {
-                    errorText.innerText = data.message || "Invalid credentials. Please verify your access.";
-                    errorDiv.classList.remove('hidden');
-                }
-            } catch(err) {
-                errorText.innerText = "Network error. Please ensure the Render backend is running.";
-                errorDiv.classList.remove('hidden');
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
+    try {
+        const data = await apiRequest('/login', { role: state.role, email: email, authString: authString });
+        
+        // Ensure successful login data is present
+        if (data.status === 'success' || data.token) { 
+            const userId = state.role === 'student' ? authString : 'ADMIN';
+            state.user = { email: email, role: state.role, id: userId, batch: data.batch };
+            
+            localStorage.setItem('ls_lms_user', JSON.stringify(state.user));
+            localStorage.setItem('ls_jwt_token', data.token); // Store JWT securely
+            
+            document.getElementById('login-view').classList.remove('active');
+            document.getElementById('dashboard-view').classList.add('active');
+            
+            document.getElementById('user-email-display').innerText = email;
+            document.getElementById('user-role-display').innerText = state.role === 'admin' ? 'Instructor' : 'Student';
+            
+            updateProfileUI(email, userId, data.batch);
+            setupRoleUI();
+            
+            showBuffering("Loading Portal Data...", true);
+            await fetchLMSData(true); 
+            
+            hideBuffering();
+            switchTab('overview');
+        } else {
+            // Handles if backend returns 200 OK but with an error status in the JSON
+            errorText.innerText = data.message || "Invalid credentials. Please verify your access.";
+            errorDiv.classList.remove('hidden');
         }
+    } catch(err) {
+        // Dynamically show either the network offline error or the specific 401 auth error
+        if (err.message === "Failed to fetch") {
+            errorText.innerText = "Network error. Please ensure the Render backend is running.";
+        } else {
+            errorText.innerText = err.message || "Invalid credentials.";
+        }
+        errorDiv.classList.remove('hidden');
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+}
 
         function updateProfileUI(email, id, batch) {
             const namePart = email.split('@')[0];
