@@ -54,12 +54,10 @@
 <body>
 
 
-<!-- GLOBAL BUFFERING OVERLAY -->
-    <div id="global-buffering" class="hidden fixed inset-0 z-[999] bg-slate-900/80 backdrop-blur-md flex-col items-center justify-center">
+<div id="global-buffering" class="hidden fixed inset-0 z-[999] bg-slate-900/80 backdrop-blur-md flex-col items-center justify-center">
         <div class="classic-spinner mb-6"></div>
         <h3 class="text-white text-2xl font-extrabold tracking-widest uppercase animate-pulse">Buffering Data</h3>
         <p class="text-slate-400 text-sm mt-2 font-medium" id="buffering-text">Synchronizing with Database...</p>
-        <!-- NEW TIMER ELEMENT -->
         <div id="buffering-timer" class="hidden text-sky-400 text-xl font-mono mt-3 font-bold tracking-widest">0.0s</div>
     </div>
 
@@ -83,7 +81,6 @@
                     A unified platform for tracking assignments, video lectures, and student progress with zero friction.
                 </p>
 
-                <!-- Sleek Dashboard Mockup -->
                 <div class="w-full max-w-[480px] mt-8">
                     <div class="rounded-xl overflow-hidden bg-[#1e1e1e] border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.5)]">
                         <div class="bg-[#252526] px-4 py-3 flex items-center gap-4 border-b border-white/5">
@@ -206,7 +203,6 @@
 
             <main class="flex-1 overflow-y-auto p-8 relative">
                 
-                <!-- TAB: OVERVIEW (REDESIGNED) -->
                 <div id="tab-overview" class="tab-content active space-y-8 max-w-6xl mx-auto">
                     <div>
                         <h2 class="text-3xl font-display font-bold text-slate-800 tracking-tight">Welcome back, <span id="overview-user-name">User</span>! 👋</h2>
@@ -216,7 +212,6 @@
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div class="lg:col-span-2 space-y-8">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <!-- Gradient Card -->
                                 <div class="relative overflow-hidden bg-gradient-to-br from-[#02569B] to-sky-700 p-6 rounded-3xl shadow-[0_10px_30px_-10px_rgba(2,86,155,0.5)] text-white flex flex-col justify-between transition-transform hover:-translate-y-1">
                                     <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl"></div>
                                     <div class="absolute bottom-0 left-0 -mb-4 -ml-4 w-20 h-20 bg-sky-300 opacity-20 rounded-full blur-xl"></div>
@@ -236,7 +231,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Clean White Card -->
                                 <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between transition-transform hover:-translate-y-1 hover:shadow-md">
                                     <div class="flex justify-between items-start mb-6">
                                         <div>
@@ -255,28 +249,23 @@
                                 </div>
                             </div>
 
-                            <!-- Upcoming Tasks -->
                             <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
                                 <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center">
                                     <h3 class="font-bold text-slate-800">Upcoming Tasks</h3>
                                     <button onclick="switchTab('assignments')" class="text-xs font-bold text-[#02569B] hover:underline">View All</button>
                                 </div>
                                 <div class="divide-y divide-slate-100" id="overview-upcoming-tasks">
-                                    <!-- Populated dynamically -->
-                                </div>
+                                    </div>
                             </div>
                         </div>
 
-                        <!-- Right Column Calendar -->
                         <div class="lg:col-span-1">
                             <div id="calendar-container" class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm sticky top-8">
-                                <!-- Populated dynamically -->
-                            </div>
+                                </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- TAB: COURSES / LECTURES -->
                 <div id="tab-courses" class="tab-content space-y-6">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 pb-2">
                         <div>
@@ -298,11 +287,9 @@
                     </div>
 
                     <div id="lecture-workspace" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <!-- Populated by JS -->
-                    </div>
+                        </div>
                 </div>
 
-                <!-- TAB: ASSIGNMENTS -->
                 <div id="tab-assignments" class="tab-content space-y-6">
                     <div class="flex justify-between items-end mb-6">
                         <div>
@@ -323,11 +310,9 @@
                     </div>
 
                     <div id="assignment-list" class="space-y-4">
-                        <!-- Populated by JS -->
-                    </div>
+                        </div>
                 </div>
 
-                <!-- TAB: CERTIFICATES -->
                 <div id="tab-certificates" class="tab-content space-y-6">
                     <div class="flex justify-between items-end mb-6 border-b border-slate-200 pb-4">
                         <div>
@@ -363,7 +348,6 @@
                     </div>
                 </div>
 
-                <!-- TAB: TESTS -->
                 <div id="tab-tests" class="tab-content">
                     <h2 class="text-3xl font-display font-bold text-slate-800 mb-4 tracking-tight">Tests</h2>
                     <div class="bg-white p-12 rounded-2xl border border-slate-200 text-center shadow-sm">
@@ -372,7 +356,6 @@
                     </div>
                 </div>
 
-                <!-- TAB: PROFILE -->
                 <div id="tab-profile" class="tab-content">
                     <h2 class="text-3xl font-display font-bold text-slate-800 mb-6 tracking-tight">My Profile</h2>
                     <div class="bg-white rounded-[24px] border border-slate-200 shadow-sm overflow-hidden mb-6 relative">
@@ -412,8 +395,6 @@
             </main>
         </div>
     </div>
-
-    <!-- MODALS -->
 
     <div id="lecture-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
@@ -534,8 +515,6 @@
         </div>
     </div>
 
-    <!-- JS Logic -->
-
     <script>
           
         // CHANGE THIS TO YOUR RENDER DEPLOYMENT URL IN PRODUCTION
@@ -547,6 +526,7 @@
             role: 'student', 
             user: null, 
             assFilter: 'All', lecFilter: 'All', activeLectureId: null, 
+            lecSortOrder: 'oldest',
             assignments: [], lectures: [], materials: [], certificates: []
         };
 
@@ -1087,11 +1067,16 @@ function logout() {
         }
 
         window.filterLectures = function(cat) { state.lecFilter = cat; renderLectures(); }
-        // 1. This ONLY updates the UI when you click the sidebar
-window.selectLecture = function(id) {
-    state.activeLectureId = id;
-    renderLectures(); 
-}
+        
+        window.toggleLectureSort = function() {
+            state.lecSortOrder = state.lecSortOrder === 'newest' ? 'oldest' : 'newest';
+            renderLectures();
+        }
+
+        window.selectLecture = function(id) {
+            state.activeLectureId = id;
+            renderLectures(); 
+        }
 
 // Variable to store the player instance
 // --- INLINE PLAYER LOGIC (YOUTUBE + GOOGLE DRIVE) ---
@@ -1290,12 +1275,19 @@ window.selectLecture = function(id) {
             const container = document.getElementById('lecture-workspace');
             container.innerHTML = '';
             
-            let filteredLecs = state.lectures;
+            let filteredLecs = [...state.lectures]; // Spread into new array to safely sort
             let filteredMats = state.materials;
             
             if (state.lecFilter !== 'All') {
                 filteredLecs = state.lectures.filter(l => l.category === state.lecFilter);
                 filteredMats = state.materials.filter(m => m.category === state.lecFilter);
+            }
+
+            // Apply Sorting logic
+            if (state.lecSortOrder === 'newest') {
+                filteredLecs.sort((a, b) => b.id - a.id);
+            } else {
+                filteredLecs.sort((a, b) => a.id - b.id);
             }
 
             if(filteredLecs.length === 0 && filteredMats.length === 0) {
@@ -1417,9 +1409,15 @@ filteredMats.forEach(mat => {
                 </div>
                 <div class="lg:col-span-1 flex flex-col gap-6">
                     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[350px]">
-                        <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-2 bg-white">
-                            <svg class="w-4 h-4 text-[#02569B]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
-                            <h4 class="text-[11px] font-black text-[#02569B] uppercase tracking-wider">VIDEO LECTURES</h4>
+                        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-white">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-[#02569B]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+                                <h4 class="text-[11px] font-black text-[#02569B] uppercase tracking-wider">VIDEO LECTURES</h4>
+                            </div>
+                            <button onclick="toggleLectureSort()" class="text-[10px] font-bold text-slate-500 hover:text-[#02569B] flex items-center gap-1.5 transition-colors bg-slate-50 hover:bg-blue-50 px-2.5 py-1.5 rounded-md border border-slate-200 shadow-sm">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path></svg>
+                                ${state.lecSortOrder === 'newest' ? 'Newest Top' : 'Oldest Top'}
+                            </button>
                         </div>
                         <div class="p-3 overflow-y-auto flex-1 custom-scrollbar space-y-1">
                             ${playlistHtml}
